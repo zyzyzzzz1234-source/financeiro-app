@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#667eea">
+  <meta name="description" content="Sistema Financeiro - Gerencie seus gastos e investimentos">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Financeiro">
+  
+  <!-- Ícone -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
+  
+  <!-- Fontes -->
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./styles.css">
+  
+  <title>Sistema Financeiro</title>
+  
+  <style>
+    /* Estilos específicos da página inicial */
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding-top: 52px;
+    }
+    
+    .config-section {
+      background: rgba(255,255,255,0.97);
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .config-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e8eaed;
+    }
+    
+    .config-header .material-icons {
+      color: #9334e6;
+      font-size: 20px;
+    }
+    
+    .config-header h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #202124;
+    }
+    
+    .config-fields {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #e8eaed;
+    }
+    
+    .config-fields.show {
+      display: block;
+    }
+    
+    .config-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .config-row .form-group {
+      margin-bottom: 0;
+    }
+    
+    .config-row input {
+      text-align: center;
+      font-weight: 600;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+    }
+    
+    /* Banner de instalação */
+    .install-banner {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 14px 16px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      z-index: 90;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .install-banner.show {
+      display: flex;
+    }
+    
+    .install-banner-text {
+      flex: 1;
+      font-size: 13px;
+      color: #202124;
+    }
+    
+    .install-banner-text strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    
+    .install-banner .btn {
+      padding: 10px 16px;
+    }
+    
+    .install-banner-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #5f6368;
+      cursor: pointer;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Status de Conexão -->
+  <div id="statusBar" class="status-bar online">
+    <span id="statusIcon">🟢</span>
+    <span id="statusText">Online</span>
+    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
+  </div>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header-gradient">
+      <div class="header-icon">💰</div>
+      <h1>Sistema Financeiro</h1>
+      <p>Gerencie seus gastos e investimentos</p>
+    </div>
+
+    <!-- Cards de Navegação -->
+    <div class="nav-cards">
+      
+      <!-- Cadastrar Registro -->
+      <a href="./cadastro.html" class="nav-card">
+        <div class="nav-card-icon cadastro">
+          <span class="material-icons">add_circle</span>
+        </div>
+        <div class="nav-card-content">
+          <div class="nav-card-title">Cadastrar Registro</div>
+          <div class="nav-card-desc">Adicionar gastos ou investimentos</div>
+        </div>
+        <span class="material-icons nav-card-arrow">chevron_right</span>
+      </a>
+
+      <!-- Visualizar Registros -->
+      <a href="./visualizador.html" class="nav-card">
+        <div class="nav-card-icon visualizar">
+          <span class="material-icons">visibility</span>
+        </div>
+        <div class="nav-card-content">
+          <div class="nav-card-title">Visualizar Registros</div>
+          <div class="nav-card-desc">Ver e editar seus registros</div>
+        </div>
+        <span class="material-icons nav-card-arrow">chevron_right</span>
+      </a>
+
+      <!-- Cadastro de Nomes -->
+      <a href="./nomes.html" class="nav-card">
+        <div class="nav-card-icon nomes">
+          <span class="material-icons">edit_note</span>
+        </div>
+        <div class="nav-card-content">
+          <div class="nav-card-title">Cadastro de Nomes</div>
+          <div class="nav-card-desc">Categorias, investimentos e cartões</div>
+        </div>
+        <span class="material-icons nav-card-arrow">chevron_right</span>
+      </a>
+
+    </div>
+
+    <!-- Configuração de Cartão -->
+    <div class="config-section">
+      <div class="config-header">
+        <span class="material-icons">credit_card</span>
+        <h3>Configurar Cartão</h3>
+      </div>
+
+      <div class="form-group">
+        <label>Selecione o Cartão</label>
+        <select id="selectCartao">
+          <option value="">Carregando...</option>
+        </select>
+      </div>
+
+      <div class="config-fields" id="configFields">
+        <div class="config-row">
+          <div class="form-group">
+            <label>Dia Fechamento</label>
+            <input type="number" id="inputFechamento" min="1" max="31" placeholder="Ex: 15" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>Dia Vencimento</label>
+            <input type="number" id="inputVencimento" min="1" max="31" placeholder="Ex: 22" inputmode="numeric">
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-full" id="btnSalvarConfig">
+          <span class="material-icons">save</span>
+          Salvar Configuração
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      Sistema Financeiro PWA © 2025<br>
+      <span id="versionInfo">v1.0</span>
+    </div>
+
+  </div>
+
+  <!-- Banner de Instalação -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-text">
+      <strong>📲 Instalar App</strong>
+      Use offline no seu celular!
+    </div>
+    <button class="btn btn-primary" id="btnInstall">Instalar</button>
+    <button class="install-banner-close" id="btnCloseInstall">✕</button>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Carregando...</div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="./app.js"></script>
+  
+  <script>
+  (function() {
+    'use strict';
+    
+    // ========== ELEMENTOS ==========
+    const els = {
+      selectCartao: document.getElementById('selectCartao'),
+      configFields: document.getElementById('configFields'),
+      inputFechamento: document.getElementById('inputFechamento'),
+      inputVencimento: document.getElementById('inputVencimento'),
+      btnSalvarConfig: document.getElementById('btnSalvarConfig'),
+      installBanner: document.getElementById('installBanner'),
+      btnInstall: document.getElementById('btnInstall'),
+      btnCloseInstall: document.getElementById('btnCloseInstall')
+    };
+    
+    // ========== ESTADO ==========
+    let cartoes = [];
+    let deferredPrompt = null;
+    
+    // ========== INICIALIZAÇÃO ==========
+    async function init() {
+      console.log('[Index] Inicializando página inicial...');
+      
+      // Carrega cartões
+      await carregarCartoes();
+      
+      // Setup eventos
+      setupEventos();
+      
+      // Setup PWA Install
+      setupInstallPrompt();
+      
+      console.log('[Index] Página inicial pronta!');
+    }
+    
+    // ========== CARREGAR CARTÕES ==========
+    async function carregarCartoes() {
+      const App = window.FinanceiroApp;
+      
+      // Tenta cache primeiro
+      const cached = await App.getCachedData('cartoes');
+      if (cached && cached.length > 0) {
+        cartoes = cached;
+        preencherCartoes();
+      }
+      
+      // Busca da API
+      if (navigator.onLine) {
+        try {
+          const result = await App.apiRequest('obterCartoes');
+          
+          if (result.success && result.data) {
+            cartoes = result.data;
+            await App.cacheData('cartoes', cartoes);
+            preencherCartoes();
+          }
+        } catch (error) {
+          console.error('[Index] Erro ao carregar cartões:', error);
+        }
+      }
+      
+      // Se não tem cartões, mostra mensagem
+      if (cartoes.length === 0) {
+        els.selectCartao.innerHTML = '<option value="">Nenhum cartão cadastrado</option>';
+      }
+    }
+    
+    function preencherCartoes() {
+      let html = '<option value="">Escolher cartão...</option>';
+      
+      for (const cartao of cartoes) {
+        html += `<option value="${cartao}">${cartao}</option>`;
+      }
+      
+      els.selectCartao.innerHTML = html;
+    }
+    
+    // ========== EVENTOS ==========
+    function setupEventos() {
+      // Seleção de cartão
+      els.selectCartao.addEventListener('change', onCartaoChange);
+      
+      // Salvar configuração
+      els.btnSalvarConfig.addEventListener('click', salvarConfig);
+      
+      // Botão instalar
+      els.btnInstall.addEventListener('click', installApp);
+      els.btnCloseInstall.addEventListener('click', () => {
+        els.installBanner.classList.remove('show');
+        localStorage.setItem('installBannerDismissed', 'true');
+      });
+    }
+    
+    // ========== SELEÇÃO DE CARTÃO ==========
+    async function onCartaoChange() {
+      const nome = els.selectCartao.value;
+      
+      if (!nome) {
+        els.configFields.classList.remove('show');
+        return;
+      }
+      
+      els.configFields.classList.add('show');
+      els.inputFechamento.value = '';
+      els.inputVencimento.value = '';
+      
+      // Carrega configuração do cartão
+      const App = window.FinanceiroApp;
+      
+      try {
+        const result = await App.apiRequest('obterConfigCartao', { nomeCartao: nome });
+        
+        if (result.success) {
+          els.inputFechamento.value = result.fechamento || '';
+          els.inputVencimento.value = result.vencimento || '';
+        }
+      } catch (error) {
+        console.error('[Index] Erro ao carregar config:', error);
+      }
+    }
+    
+    // ========== SALVAR CONFIGURAÇÃO ==========
+    async function salvarConfig() {
+      const App = window.FinanceiroApp;
+      
+      const nome = els.selectCartao.value;
+      const fechamento = els.inputFechamento.value;
+      const vencimento = els.inputVencimento.value;
+      
+      if (!nome) {
+        App.showToast('Selecione um cartão', 'error');
+        return;
+      }
+      
+      if (!fechamento || !vencimento) {
+        App.showToast('Preencha os campos', 'error');
+        return;
+      }
+      
+      els.btnSalvarConfig.disabled = true;
+      
+      try {
+        const result = await App.executeOperation('salvarConfigCartao', {
+          nomeCartao: nome,
+          fechamento: parseInt(fechamento),
+          vencimento: parseInt(vencimento)
+        });
+        
+        if (result.success) {
+          App.showToast('Configuração salva!', 'success');
+        } else if (!result.offline) {
+          App.showToast(result.error || 'Erro ao salvar', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        els.btnSalvarConfig.disabled = false;
+      }
+    }
+    
+    // ========== PWA INSTALL ==========
+    function setupInstallPrompt() {
+      // Listener para o evento beforeinstallprompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Mostra banner se não foi dispensado
+        if (localStorage.getItem('installBannerDismissed') !== 'true') {
+          setTimeout(() => {
+            els.installBanner.classList.add('show');
+          }, 3000);
+        }
+      });
+      
+      // Detecta se já está instalado
+      window.addEventListener('appinstalled', () => {
+        console.log('[PWA] App instalado!');
+        els.installBanner.classList.remove('show');
+        deferredPrompt = null;
+        window.FinanceiroApp.showToast('App instalado com sucesso!', 'success');
+      });
+    }
+    
+    async function installApp() {
+      if (!deferredPrompt) {
+        window.FinanceiroApp.showToast('Instalação não disponível', 'warning');
+        return;
+      }
+      
+      deferredPrompt.prompt();
+      
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('[PWA] Instalação aceita');
+      } else {
+        console.log('[PWA] Instalação recusada');
+      }
+      
+      deferredPrompt = null;
+      els.installBanner.classList.remove('show');
+    }
+    
+    // ========== INICIAR ==========
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+  })();
+  </script>
+
+</body>
+</html>
