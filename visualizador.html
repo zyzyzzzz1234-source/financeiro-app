@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#9334e6">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- Ícone -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%239334e6' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>📊</text></svg>">
+  
+  <!-- Fontes -->
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./styles.css">
+  
+  <title>Visualizar Registros</title>
+  
+  <style>
+    .filter-section {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    
+    .filter-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    
+    .filter-row .form-group label {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    
+    .filter-row .form-group input {
+      height: 40px;
+      font-size: 13px;
+    }
+    
+    .filter-row .btn {
+      height: 40px;
+      padding: 0 14px;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    
+    .summary-card {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .summary-card .label {
+      font-size: 10px;
+      color: #5f6368;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    
+    .summary-card .value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    
+    .summary-card.gastos .value { color: #ea4335; }
+    .summary-card.receita .value { color: #34a853; }
+    .summary-card.balanco .value { color: #1a73e8; }
+    .summary-card.fatura .value { color: #f57c00; }
+    
+    .tabs-filter {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    
+    .tab-filter {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 20px;
+      background: white;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      color: #5f6368;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .tab-filter.active {
+      background: #1a73e8;
+      color: white;
+    }
+    
+    .tab-filter[data-filter="gastos"].active { background: #ea4335; }
+    .tab-filter[data-filter="investimento"].active { background: #1a73e8; }
+    .tab-filter[data-filter="cartao"].active { background: #f57c00; }
+    
+    .registro-card {
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    
+    .registro-card:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Status -->
+  <div id="statusBar" class="status-bar online">
+    <span id="statusIcon">🟢</span>
+    <span id="statusText">Online</span>
+    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
+  </div>
+
+  <!-- Botão Voltar -->
+  <a class="back-button-fixed" href="./index.html">
+    <span class="material-icons">arrow_back</span>
+    Início
+  </a>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h2>📊 Visualizar Registros</h2>
+    </div>
+
+    <!-- Filtros de Data -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="form-group">
+          <label>Data Início</label>
+          <input type="date" id="filtroInicio">
+        </div>
+        <div class="form-group">
+          <label>Data Fim</label>
+          <input type="date" id="filtroFim">
+        </div>
+        <button class="btn btn-primary" id="btnFiltrar">
+          <span class="material-icons">search</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="summary-grid">
+      <div class="summary-card gastos">
+        <div class="label">💸 Gastos</div>
+        <div class="value" id="totalGastos">R$ 0</div>
+      </div>
+      <div class="summary-card receita">
+        <div class="label">💰 Receita</div>
+        <div class="value" id="totalReceita">R$ 0</div>
+      </div>
+      <div class="summary-card balanco">
+        <div class="label">📈 Balanço</div>
+        <div class="value" id="totalBalanco">R$ 0</div>
+      </div>
+      <div class="summary-card fatura">
+        <div class="label">💳 Fatura</div>
+        <div class="value" id="totalFatura">R$ 0</div>
+      </div>
+    </div>
+
+    <!-- Tabs de Filtro -->
+    <div class="tabs-filter">
+      <button class="tab-filter active" data-filter="todos">Todos</button>
+      <button class="tab-filter" data-filter="gastos">Gastos</button>
+      <button class="tab-filter" data-filter="investimento">Investimento</button>
+      <button class="tab-filter" data-filter="cartao">Cartão</button>
+    </div>
+
+    <!-- Lista de Registros -->
+    <div class="list-section">
+      <div class="list-header">
+        <div class="list-title">
+          <span class="material-icons">receipt_long</span>
+          Registros
+        </div>
+        <span class="list-count" id="countRegistros">0 registros</span>
+      </div>
+      <div class="list-body" id="listaRegistros" style="max-height: none;">
+        <div class="empty-state">
+          <span class="material-icons">hourglass_empty</span>
+          <p>Carregando registros...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal de Edição -->
+  <div class="modal-overlay" id="modalEditar">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><span class="material-icons">edit</span> Editar Registro</h3>
+        <button class="modal-close" id="btnFecharEditar">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editLinha">
+        
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="editData">
+        </div>
+        
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="editTipo">
+            <option value="gastos">Gastos</option>
+            <option value="investimento">Investimento</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Categoria</label>
+          <input type="text" id="editCategoria">
+        </div>
+        
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="editDescricao">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Método</label>
+            <select id="editMetodo">
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">Pix</option>
+              <option value="cartaoCredito">Cartão de Crédito</option>
+              <option value="cartaoDebito">Cartão de Débito</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="text" id="editValor" inputmode="decimal">
+          </div>
+        </div>
+        
+        <div class="form-row" id="editCartaoRow">
+          <div class="form-group">
+            <label>Cartão</label>
+            <input type="text" id="editCartao">
+          </div>
+          <div class="form-group">
+            <label>Parcelas</label>
+            <input type="text" id="editParcelas" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelarEditar">Cancelar</button>
+        <button class="btn btn-primary" id="btnSalvarEditar">
+          <span class="material-icons">save</span>
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Exclusão -->
+  <div class="modal-overlay" id="modalExcluir">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><span class="material-icons">delete</span> Excluir Registro</h3>
+        <button class="modal-close" id="btnFecharExcluir">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="text-align: center; margin-bottom: 16px;">Tem certeza que deseja excluir este registro?</p>
+        <div class="registro-card" id="cardExcluir" style="cursor: default;"></div>
+        <input type="hidden" id="excluirLinha">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelarExcluir">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmarExcluir">
+          <span class="material-icons">delete</span>
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Carregando...</div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="./app.js"></script>
+  
+  <script>
+  (function() {
+    'use strict';
+    
+    // ========== ESTADO ==========
+    let registros = [];
+    let registrosFiltrados = [];
+    let filtroAtual = 'todos';
+    let receita = 0;
+    
+    // ========== ELEMENTOS ==========
+    const els = {
+      filtroInicio: document.getElementById('filtroInicio'),
+      filtroFim: document.getElementById('filtroFim'),
+      btnFiltrar: document.getElementById('btnFiltrar'),
+      totalGastos: document.getElementById('totalGastos'),
+      totalReceita: document.getElementById('totalReceita'),
+      totalBalanco: document.getElementById('totalBalanco'),
+      totalFatura: document.getElementById('totalFatura'),
+      countRegistros: document.getElementById('countRegistros'),
+      listaRegistros: document.getElementById('listaRegistros'),
+      modalEditar: document.getElementById('modalEditar'),
+      modalExcluir: document.getElementById('modalExcluir')
+    };
+    
+    // ========== INICIALIZAÇÃO ==========
+    async function init() {
+      console.log('[Visualizador] Inicializando...');
+      
+      setFiltroMesAtual();
+      setupEventos();
+      await carregarDados();
+      
+      console.log('[Visualizador] Pronto!');
+    }
+    
+    function setFiltroMesAtual() {
+      const hoje = new Date();
+      const ano = hoje.getFullYear();
+      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+      
+      els.filtroInicio.value = `${ano}-${mes}-01`;
+      
+      const ultimoDia = new Date(ano, hoje.getMonth() + 1, 0).getDate();
+      els.filtroFim.value = `${ano}-${mes}-${ultimoDia}`;
+    }
+    
+    // ========== CARREGAR DADOS ==========
+    async function carregarDados() {
+      const App = window.FinanceiroApp;
+      
+      // Converte datas para formato DD/MM/YYYY
+      const inicio = formatarDataBR(els.filtroInicio.value);
+      const fim = formatarDataBR(els.filtroFim.value);
+      
+      // Tenta carregar do cache primeiro
+      const cacheKey = `registros_${els.filtroInicio.value}_${els.filtroFim.value}`;
+      const cached = await App.getCachedData(cacheKey);
+      
+      if (cached) {
+        registros = cached.registros || [];
+        receita = cached.receita || 0;
+        aplicarFiltro();
+      }
+      
+      // Se online, busca da API
+      if (navigator.onLine) {
+        App.showLoader(true, 'Carregando registros...');
+        
+        try {
+          const result = await App.apiRequest('listarRegistros', {
+            filtroDataInicio: inicio,
+            filtroDataFim: fim
+          });
+          
+          if (result.success) {
+            registros = result.registros || [];
+            
+            // Busca receita
+            const receitaResult = await App.apiRequest('obterReceitaLoja', {
+              filtroDataInicio: inicio,
+              filtroDataFim: fim
+            });
+            
+            if (receitaResult.success) {
+              receita = receitaResult.receita || 0;
+            }
+            
+            // Salva no cache
+            await App.cacheData(cacheKey, { registros, receita }, 300000); // 5 minutos
+            
+            aplicarFiltro();
+          } else {
+            App.showToast(result.error || 'Erro ao carregar', 'error');
+          }
+        } catch (error) {
+          console.error('[Visualizador] Erro:', error);
+          App.showToast('Erro ao carregar dados', 'error');
+        } finally {
+          App.showLoader(false);
+        }
+      } else if (!cached) {
+        els.listaRegistros.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">cloud_off</span>
+            <p>Sem conexão. Dados não disponíveis offline.</p>
+          </div>
+        `;
+      }
+    }
+    
+    function formatarDataBR(dataISO) {
+      if (!dataISO) return '';
+      const partes = dataISO.split('-');
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    
+    // ========== FILTROS ==========
+    function aplicarFiltro() {
+      if (filtroAtual === 'todos') {
+        registrosFiltrados = [...registros];
+      } else if (filtroAtual === 'cartao') {
+        registrosFiltrados = registros.filter(r => 
+          r.metodoPagamento === 'cartaoCredito' || r.nomeCartao
+        );
+      } else {
+        registrosFiltrados = registros.filter(r => r.tipoCategoria === filtroAtual);
+      }
+      
+      atualizarResumo();
+      renderizarLista();
+    }
+    
+    function atualizarResumo() {
+      const App = window.FinanceiroApp;
+      
+      let totalG = 0, totalF = 0;
+      
+      for (const r of registros) {
+        if (r.tipoCategoria === 'gastos') {
+          totalG += r.preco || 0;
+        }
+        if (r.metodoPagamento === 'cartaoCredito' || r.nomeCartao) {
+          totalF += r.preco || 0;
+        }
+      }
+      
+      const balanco = receita - totalG;
+      
+      els.totalGastos.textContent = App.formatMoney(totalG);
+      els.totalReceita.textContent = App.formatMoney(receita);
+      els.totalBalanco.textContent = App.formatMoney(balanco);
+      els.totalBalanco.style.color = balanco >= 0 ? '#34a853' : '#ea4335';
+      els.totalFatura.textContent = App.formatMoney(totalF);
+    }
+    
+    // ========== RENDERIZAÇÃO ==========
+    function renderizarLista() {
+      const App = window.FinanceiroApp;
+      const n = registrosFiltrados.length;
+      
+      els.countRegistros.textContent = `${n} registro${n !== 1 ? 's' : ''}`;
+      
+      if (n === 0) {
+        els.listaRegistros.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Nenhum registro encontrado</p>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '';
+      
+      for (const r of registrosFiltrados) {
+        const isGastos = r.tipoCategoria === 'gastos';
+        const cardClass = App.getCardColorClass(r.nomeCartao);
+        
+        html += `
+          <div class="registro-card tipo-${r.tipoCategoria}" data-linha="${r.linha}" onclick="abrirRegistro(${r.linha})">
+            <div class="registro-card-actions">
+              <button class="action-btn edit" onclick="event.stopPropagation(); abrirEditar(${r.linha})">
+                <span class="material-icons">edit</span>
+              </button>
+              <button class="action-btn delete" onclick="event.stopPropagation(); abrirExcluir(${r.linha})">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+            <div class="registro-card-top">
+              <span class="badge badge-${r.tipoCategoria}">${isGastos ? 'Gastos' : 'Invest.'}</span>
+              ${r.nomeCartao ? `<span class="badge badge-cartao ${cardClass}">${r.nomeCartao}</span>` : ''}
+              <span class="registro-card-data">${r.data || '-'}</span>
+            </div>
+            <div class="registro-card-descricao">${r.descricao || r.categoria || '-'}</div>
+            <div class="registro-card-categoria">${r.categoria || '-'}</div>
+            <div class="registro-card-footer">
+              <div class="registro-card-metodo">
+                <span class="material-icons">${getMetodoIcon(r.metodoPagamento)}</span>
+                ${getMetodoNome(r.metodoPagamento)}
+                ${r.parcela ? `<span class="registro-card-parcelas">${r.parcela}</span>` : ''}
+              </div>
+              <div class="registro-card-valor ${r.tipoCategoria}">${App.formatMoney(r.preco)}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      els.listaRegistros.innerHTML = html;
+    }
+    
+    function getMetodoIcon(m) {
+      if (m === 'cartaoCredito' || m === 'cartaoDebito') return 'credit_card';
+      if (m === 'pix') return 'pix';
+      return 'payments';
+    }
+    
+    function getMetodoNome(m) {
+      if (m === 'cartaoCredito') return 'Crédito';
+      if (m === 'cartaoDebito') return 'Débito';
+      if (m === 'pix') return 'Pix';
+      if (m === 'dinheiro') return 'Dinheiro';
+      return m || '-';
+    }
+    
+    // ========== EVENTOS ==========
+    function setupEventos() {
+      // Filtrar por data
+      els.btnFiltrar.addEventListener('click', carregarDados);
+      
+      // Tabs de filtro
+      document.querySelectorAll('.tab-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-filter').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          filtroAtual = btn.dataset.filter;
+          aplicarFiltro();
+        });
+      });
+      
+      // Modal editar
+      document.getElementById('btnFecharEditar').addEventListener('click', fecharEditar);
+      document.getElementById('btnCancelarEditar').addEventListener('click', fecharEditar);
+      document.getElementById('btnSalvarEditar').addEventListener('click', salvarEdicao);
+      document.getElementById('editValor').addEventListener('input', (e) => {
+        window.FinanceiroApp.maskMoney(e);
+      });
+      document.getElementById('editMetodo').addEventListener('change', () => {
+        const isCartao = document.getElementById('editMetodo').value === 'cartaoCredito';
+        document.getElementById('editCartaoRow').style.display = isCartao ? 'flex' : 'none';
+      });
+      
+      // Modal excluir
+      document.getElementById('btnFecharExcluir').addEventListener('click', fecharExcluir);
+      document.getElementById('btnCancelarExcluir').addEventListener('click', fecharExcluir);
+      document.getElementById('btnConfirmarExcluir').addEventListener('click', confirmarExclusao);
+    }
+    
+    // ========== EDITAR ==========
+    window.abrirRegistro = function(linha) {
+      // Por enquanto, abre edição
+      abrirEditar(linha);
+    };
+    
+    window.abrirEditar = function(linha) {
+      const App = window.FinanceiroApp;
+      const r = registros.find(x => x.linha === linha);
+      if (!r) return;
+      
+      document.getElementById('editLinha').value = linha;
+      document.getElementById('editData').value = App.dateToISO(r.data);
+      document.getElementById('editTipo').value = r.tipoCategoria || 'gastos';
+      document.getElementById('editCategoria').value = r.categoria || '';
+      document.getElementById('editDescricao').value = r.descricao || '';
+      document.getElementById('editMetodo').value = r.metodoPagamento || 'dinheiro';
+      document.getElementById('editValor').value = App.formatMoney(r.preco);
+      document.getElementById('editCartao').value = r.nomeCartao || '';
+      document.getElementById('editParcelas').value = r.parcela || '';
+      
+      const isCartao = r.metodoPagamento === 'cartaoCredito';
+      document.getElementById('editCartaoRow').style.display = isCartao ? 'flex' : 'none';
+      
+      els.modalEditar.classList.add('active');
+    };
+    
+    function fecharEditar() {
+      els.modalEditar.classList.remove('active');
+    }
+    
+    async function salvarEdicao() {
+      const App = window.FinanceiroApp;
+      
+      const linha = parseInt(document.getElementById('editLinha').value);
+      const data = document.getElementById('editData').value;
+      
+      const registro = {
+        linha: linha,
+        data: formatarDataBR(data),
+        tipoCategoria: document.getElementById('editTipo').value,
+        categoria: document.getElementById('editCategoria').value,
+        descricao: document.getElementById('editDescricao').value,
+        metodoPagamento: document.getElementById('editMetodo').value,
+        preco: App.parseMoney(document.getElementById('editValor').value),
+        nomeCartao: document.getElementById('editCartao').value
+      };
+      
+      App.showLoader(true, 'Salvando...');
+      
+      try {
+        const result = await App.executeOperation('editarRegistro', { registro });
+        
+        if (result.success) {
+          fecharEditar();
+          
+          if (result.offline) {
+            // Atualiza localmente
+            const idx = registros.findIndex(r => r.linha === linha);
+            if (idx !== -1) {
+              registros[idx] = { ...registros[idx], ...registro };
+              aplicarFiltro();
+            }
+            App.showToast('Salvo offline!', 'warning');
+          } else {
+            App.showToast('Registro atualizado!', 'success');
+            await carregarDados();
+          }
+        } else {
+          App.showToast(result.error || 'Erro ao salvar', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        App.showLoader(false);
+      }
+    }
+    
+    // ========== EXCLUIR ==========
+    window.abrirExcluir = function(linha) {
+      const App = window.FinanceiroApp;
+      const r = registros.find(x => x.linha === linha);
+      if (!r) return;
+      
+      document.getElementById('excluirLinha').value = linha;
+      
+      const cardClass = App.getCardColorClass(r.nomeCartao);
+      
+      document.getElementById('cardExcluir').innerHTML = `
+        <div class="registro-card-top">
+          <span class="badge badge-${r.tipoCategoria}">${r.tipoCategoria === 'gastos' ? 'Gastos' : 'Invest.'}</span>
+          ${r.nomeCartao ? `<span class="badge badge-cartao ${cardClass}">${r.nomeCartao}</span>` : ''}
+          <span class="registro-card-data">${r.data || '-'}</span>
+        </div>
+        <div class="registro-card-descricao">${r.descricao || r.categoria || '-'}</div>
+        <div class="registro-card-footer">
+          <div class="registro-card-metodo">${getMetodoNome(r.metodoPagamento)}</div>
+          <div class="registro-card-valor ${r.tipoCategoria}">${App.formatMoney(r.preco)}</div>
+        </div>
+      `;
+      document.getElementById('cardExcluir').className = `registro-card tipo-${r.tipoCategoria}`;
+      
+      els.modalExcluir.classList.add('active');
+    };
+    
+    function fecharExcluir() {
+      els.modalExcluir.classList.remove('active');
+    }
+    
+    async function confirmarExclusao() {
+      const App = window.FinanceiroApp;
+      const linha = parseInt(document.getElementById('excluirLinha').value);
+      
+      App.showLoader(true, 'Excluindo...');
+      
+      try {
+        const result = await App.executeOperation('excluirRegistro', { linha });
+        
+        if (result.success) {
+          fecharExcluir();
+          
+          if (result.offline) {
+            // Remove localmente
+            registros = registros.filter(r => r.linha !== linha);
+            aplicarFiltro();
+            App.showToast('Exclusão salva offline!', 'warning');
+          } else {
+            App.showToast('Registro excluído!', 'success');
+            await carregarDados();
+          }
+        } else {
+          App.showToast(result.error || 'Erro ao excluir', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        App.showLoader(false);
+      }
+    }
+    
+    // ========== INICIAR ==========
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+  })();
+  </script>
+
+</body>
+</html>
