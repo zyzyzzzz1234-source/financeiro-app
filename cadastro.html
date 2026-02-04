@@ -407,9 +407,9 @@
     async function carregarDados() {
       const App = window.FinanceiroApp;
       
-      // Carrega categorias do cache
-      const cachedG = await App.getCachedData('categorias_gastos');
-      const cachedI = await App.getCachedData('categorias_investimento');
+      // Carrega categorias do cache (síncrono)
+      const cachedG = App.getCachedData('categorias_gastos');
+      const cachedI = App.getCachedData('categorias_investimento');
       
       if (cachedG) categorias.gastos = cachedG;
       if (cachedI) categorias.investimento = cachedI;
@@ -417,7 +417,7 @@
       preencherCategorias();
       
       // Carrega cartões do cache
-      const cachedC = await App.getCachedData('cartoes');
+      const cachedC = App.getCachedData('cartoes');
       if (cachedC) {
         cartoes = cachedC;
         preencherCartoes();
@@ -430,14 +430,14 @@
           const resG = await App.apiRequest('obterCategorias', { tipo: 'gastos' });
           if (resG.success && resG.data) {
             categorias.gastos = resG.data;
-            await App.cacheData('categorias_gastos', resG.data);
+            App.cacheData('categorias_gastos', resG.data);
           }
           
           // Categorias de investimento
           const resI = await App.apiRequest('obterCategorias', { tipo: 'investimento' });
           if (resI.success && resI.data) {
             categorias.investimento = resI.data;
-            await App.cacheData('categorias_investimento', resI.data);
+            App.cacheData('categorias_investimento', resI.data);
           }
           
           preencherCategorias();
@@ -446,7 +446,7 @@
           const resC = await App.apiRequest('obterCartoes');
           if (resC.success && resC.data) {
             cartoes = resC.data;
-            await App.cacheData('cartoes', resC.data);
+            App.cacheData('cartoes', resC.data);
             preencherCartoes();
           }
         } catch (error) {
@@ -552,14 +552,15 @@
       try {
         const result = await App.apiRequest('obterValorFixo', {
           categoria: categoria,
-          tipo: tipo
+          tipoCategoria: tipo
         });
         
-        if (result.success && result.valor) {
+        if (result.success && result.valor && result.valor > 0) {
           els.inputValor.value = App.formatMoney(result.valor);
         }
       } catch (error) {
-        // Silencioso
+        // Silencioso - não é crítico
+        console.log('Valor fixo não encontrado');
       }
     }
     
@@ -737,21 +738,16 @@
       els.btnCadastrar.disabled = true;
       
       try {
-        const result = await App.executeOperation('cadastrarRegistros', {
+        const result = await App.apiRequest('cadastrarRegistros', {
           produtos: lista
         });
         
         if (result.success) {
-          if (result.offline) {
-            App.showToast(`${lista.length} registros salvos offline!`, 'warning');
-          } else {
-            App.showToast('Cadastrado com sucesso!', 'success');
-          }
-          
+          App.showToast('Cadastrado com sucesso!', 'success');
           lista = [];
           renderizarLista();
         } else {
-          App.showToast(result.error || 'Erro ao cadastrar', 'error');
+          App.showToast(result.error || result.message || 'Erro ao cadastrar', 'error');
         }
       } catch (error) {
         App.showToast('Erro: ' + error.message, 'error');
