@@ -3,281 +3,1827 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#9334e6">
-  
-  <!-- PWA -->
+  <meta name="theme-color" content="#1a73e8">
   <link rel="manifest" href="./manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  
-  <!-- Ícone -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%239334e6' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>📊</text></svg>">
-  
-  <!-- Fontes -->
+  <title>Visualizar Registros</title>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
-  <!-- Estilos -->
-  <link rel="stylesheet" href="./styles.css">
-  
-  <title>Visualizar Registros</title>
-  
   <style>
-    .filter-section {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
     
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
     }
     
-    .filter-row .form-group {
-      flex: 1;
-      margin-bottom: 0;
+    body {
+      font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f8f9fa;
+      color: #202124;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 20px;
+      padding-bottom: 80px;
     }
-    
-    .filter-row .form-group label {
-      font-size: 10px;
-      margin-bottom: 4px;
-    }
-    
-    .filter-row .form-group input {
-      height: 40px;
-      font-size: 13px;
-    }
-    
-    .filter-row .btn {
-      height: 40px;
-      padding: 0 14px;
-    }
-    
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    
-    .summary-card {
-      background: white;
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .summary-card .label {
-      font-size: 10px;
-      color: #5f6368;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    
-    .summary-card .value {
-      font-size: 16px;
-      font-weight: 700;
-    }
-    
-    .summary-card.gastos .value { color: #ea4335; }
-    .summary-card.receita .value { color: #34a853; }
-    .summary-card.balanco .value { color: #1a73e8; }
-    .summary-card.fatura .value { color: #f57c00; }
-    
-    .tabs-filter {
-      display: flex;
+
+    .back-button-fixed {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 8000;
+      display: inline-flex;
+      align-items: center;
       gap: 6px;
-      margin-bottom: 14px;
+      padding: 12px 20px;
+      background: #1a73e8;
+      border: none;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(26,115,232,.4);
+    }
+
+    .back-button-fixed .material-icons {
+      font-size: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .top-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #fff;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #5f6368;
+      box-shadow: 0 1px 2px rgba(60,64,67,.1);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .top-btn .material-icons {
+      font-size: 18px;
+    }
+
+    .top-btn.cadastro {
+      background: #34a853;
+      color: white;
+      border-color: #34a853;
+    }
+
+    .top-btn.config-cartao .material-icons {
+      color: #9334e6;
+    }
+
+    .top-btn.refresh {
+      padding: 10px;
+    }
+
+    .top-btn.refresh.loading .material-icons {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .mode-selector select {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: #5f6368;
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .auto-refresh-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #5f6368;
+      padding: 6px 12px;
+      background: #f1f3f4;
+      border-radius: 16px;
+    }
+
+    .auto-refresh-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34a853;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .auto-refresh-indicator.offline .dot {
+      background: #ea4335;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .header {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(60,64,67,.15);
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    h2 {
+      font-size: 20px;
+      font-weight: 500;
+      color: #202124;
+      margin: 0;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
     }
     
-    .tab-filter {
-      padding: 8px 14px;
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    
+    .search-box input {
+      width: 100%;
+      height: 46px;
+      padding: 0 44px 0 16px;
+      border: 1px solid #dadce0;
+      border-radius: 23px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+    
+    .search-box .search-icon {
+      position: absolute;
+      right: 14px;
+      top: 12px;
+      color: #5f6368;
+      font-size: 22px;
+    }
+    
+    .filter-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      height: 44px;
+      padding: 0 18px;
       border: none;
-      border-radius: 20px;
-      background: white;
-      font-size: 12px;
+      border-radius: 22px;
+      font-size: 14px;
       font-weight: 500;
       font-family: inherit;
-      color: #5f6368;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       cursor: pointer;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      transition: all 0.2s;
     }
     
-    .tab-filter.active {
+    .btn-primary {
       background: #1a73e8;
-      color: white;
+      color: #fff;
     }
     
-    .tab-filter[data-filter="gastos"].active { background: #ea4335; }
-    .tab-filter[data-filter="investimento"].active { background: #1a73e8; }
-    .tab-filter[data-filter="cartao"].active { background: #f57c00; }
+    .btn-secondary {
+      background: #fff;
+      color: #5f6368;
+      border: 1px solid #dadce0;
+    }
+
+    .btn-secondary.filter-active {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    .btn-secondary.filter-active .material-icons {
+      color: #fff;
+    }
+
+    .filter-badge {
+      background: #fff;
+      color: #1a73e8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 4px;
+    }
     
-    .registro-card {
+    .btn .material-icons {
+      font-size: 18px;
+    }
+
+    .active-filters {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .active-filters.show {
+      display: flex;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #e8f0fe;
+      border-radius: 16px;
+      font-size: 12px;
+      color: #1a73e8;
+      font-weight: 500;
+    }
+
+    .filter-chip .remove-chip {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.1s;
+      font-size: 14px;
+    }
+
+    .financial-cards {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
     
-    .registro-card:active {
+    .fin-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 3px rgba(60,64,67,.15);
+      min-width: 140px;
+      flex: 1;
+      max-width: 200px;
+      border-left: 4px solid #dadce0;
+    }
+    
+    .fin-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    
+    .fin-card-emoji {
+      font-size: 16px;
+    }
+    
+    .fin-card-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5f6368;
+    }
+    
+    .fin-card-value {
+      font-size: 17px;
+      font-weight: 700;
+    }
+    
+    .fin-card.despesas-total {
+      border-left-color: #ea4335;
+    }
+    .fin-card.despesas-total .fin-card-value {
+      color: #ea4335;
+    }
+    
+    .fin-card.categoria {
+      border-left-color: #9c27b0;
+      min-width: 180px;
+      max-width: 260px;
+    }
+    
+    .categoria-grid {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+    }
+    
+    .categoria-item {
+      flex: 1;
+    }
+    
+    .categoria-label {
+      font-size: 10px;
+      color: #80868b;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    
+    .categoria-valor {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ea4335;
+    }
+    
+    .categoria-valor.invest {
+      color: #1a73e8;
+    }
+    
+    .fin-card.fatura-cartao {
+      border-left-color: #f57c00;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .fin-card.fatura-cartao:active {
       transform: scale(0.98);
     }
+    .fin-card.fatura-cartao .fin-card-value {
+      color: #f57c00;
+    }
+    .fin-card.fatura-cartao .click-hint {
+      font-size: 9px;
+      color: #f57c00;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .fin-card.fatura-cartao .click-hint .material-icons {
+      font-size: 12px;
+    }
+    
+    .fin-card.receita {
+      border-left-color: #34a853;
+    }
+    .fin-card.receita .fin-card-value {
+      color: #34a853;
+    }
+    
+    .fin-card.balanco {
+      border-left-color: #1a73e8;
+    }
+    .fin-card.balanco .fin-card-value {
+      color: #1a73e8;
+    }
+    .fin-card.balanco.negativo {
+      border-left-color: #ea4335;
+    }
+    .fin-card.balanco.negativo .fin-card-value {
+      color: #ea4335;
+    }
+
+    .cartao-visual-section {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    .cartao-visual-section.show {
+      display: block;
+    }
+
+    .cartao-visual {
+      background: linear-gradient(135deg, #5f6368 0%, #3c4043 100%);
+      border-radius: 16px;
+      padding: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cartao-visual::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 100%;
+      height: 150%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    }
+
+    .cartao-visual .chip {
+      width: 36px;
+      height: 26px;
+      background: linear-gradient(135deg, #ffd700, #ffb700);
+      border-radius: 5px;
+      margin-bottom: 14px;
+    }
+
+    .cartao-visual .nome {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .cartao-visual .fatura-label {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .cartao-visual .fatura-valor {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .cartao-visual .detalhes-grid {
+      display: flex;
+      gap: 20px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .cartao-visual .detalhe-item {
+      flex: 1;
+    }
+
+    .cartao-visual .detalhe-label {
+      font-size: 9px;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    .cartao-visual .detalhe-valor {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .cartao-visual .btn-fechar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30px;
+      height: 30px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cartao-visual.nubank { background: linear-gradient(135deg, #8A05BE, #6B04A8); }
+    .cartao-visual.inter { background: linear-gradient(135deg, #FF7A00, #E86E00); }
+    .cartao-visual.c6 { background: linear-gradient(135deg, #1A1A1A, #333333); }
+    .cartao-visual.itau { background: linear-gradient(135deg, #EC7000, #003399); }
+    .cartao-visual.bradesco { background: linear-gradient(135deg, #CC092F, #A00725); }
+    .cartao-visual.santander { background: linear-gradient(135deg, #EC0000, #CC0000); }
+    .cartao-visual.bb { background: linear-gradient(135deg, #FFCC00, #003399); }
+    .cartao-visual.caixa { background: linear-gradient(135deg, #005CA9, #F37021); }
+    .cartao-visual.picpay { background: linear-gradient(135deg, #21C25E, #1BA94E); }
+    .cartao-visual.pagbank { background: linear-gradient(135deg, #00A868, #008A56); }
+    .cartao-visual.mercadopago { background: linear-gradient(135deg, #00B1EA, #009ED9); }
+
+    .content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(60,64,67,.15);
+    }
+
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .content-title {
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .content-title .material-icons {
+      font-size: 18px;
+      color: #5f6368;
+    }
+
+    .content-counters {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .counter-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #5f6368;
+      background: #f8f9fa;
+      padding: 5px 10px;
+      border-radius: 10px;
+    }
+    
+    .counter-item .counter-value {
+      font-weight: 600;
+      color: #1a73e8;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    
+    th {
+      background: #f8f9fa;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 500;
+      color: #5f6368;
+      border-bottom: 2px solid #e8eaed;
+      white-space: nowrap;
+    }
+    
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    
+    .badge-gastos {
+      background: #fce8e6;
+      color: #ea4335;
+    }
+    
+    .badge-investimento {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+
+    .badge-cartao {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 600;
+      color: white;
+      background: #5f6368;
+    }
+
+    .badge-cartao.nubank { background: #8A05BE; }
+    .badge-cartao.inter { background: #FF7A00; }
+    .badge-cartao.c6 { background: #1A1A1A; }
+    .badge-cartao.itau { background: #EC7000; }
+    .badge-cartao.bradesco { background: #CC092F; }
+    .badge-cartao.santander { background: #EC0000; }
+    .badge-cartao.bb { background: #FFCC00; color: #003399; }
+    .badge-cartao.caixa { background: #005CA9; }
+    .badge-cartao.picpay { background: #21C25E; }
+    .badge-cartao.pagbank { background: #00A868; }
+    .badge-cartao.mercadopago { background: #00B1EA; }
+    
+    .valor-parcela {
+      color: #f57c00;
+      font-weight: 600;
+    }
+
+    .valor-parcela-mult {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff3e0;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .valor-parcela-mult .mult-count {
+      background: #f57c00;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .valor-parcela-mult .mult-valor {
+      color: #e65100;
+      font-weight: 600;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .icon-btn.edit {
+      background: #e8f0fe;
+      color: #1a73e8;
+    }
+    
+    .icon-btn.delete {
+      background: #fce8e6;
+      color: #ea4335;
+    }
+    
+    .icon-btn .material-icons {
+      font-size: 16px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #5f6368;
+    }
+    
+    .empty-state .material-icons {
+      font-size: 48px;
+      color: #dadce0;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .mobile-cards-container {
+      display: none;
+    }
+
+    .mobile-registro-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(60,64,67,.12);
+      border-left: 4px solid #dadce0;
+    }
+
+    .mobile-registro-card.tipo-gastos {
+      border-left-color: #ea4335;
+    }
+
+    .mobile-registro-card.tipo-investimento {
+      border-left-color: #1a73e8;
+    }
+
+    .mobile-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .mobile-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mobile-card-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .mobile-card-top .badge {
+      font-size: 9px;
+      padding: 2px 6px;
+    }
+
+    .mobile-card-data {
+      font-size: 11px;
+      color: #80868b;
+    }
+
+    .mobile-card-descricao {
+      font-size: 14px;
+      font-weight: 500;
+      color: #202124;
+      word-break: break-word;
+    }
+
+    .mobile-card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mobile-card-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-top: 10px;
+      border-top: 1px solid #f1f3f4;
+      gap: 10px;
+    }
+
+    .mobile-card-left {
+      font-size: 12px;
+      color: #5f6368;
+      flex: 1;
+    }
+
+    .mobile-card-categoria {
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mobile-card-categoria .cat-emoji {
+      font-size: 13px;
+    }
+
+    .mobile-card-metodo {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .mobile-card-metodo .material-icons {
+      font-size: 14px;
+    }
+
+    .mobile-card-right {
+      text-align: right;
+    }
+
+    .mobile-card-valor {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .mobile-card-parcela {
+      font-size: 11px;
+      color: #f57c00;
+      font-weight: 600;
+    }
+
+    .mobile-card-parcela-mult {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff3e0;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+
+    .mobile-card-parcela-mult .mult-badge {
+      background: #f57c00;
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 6px;
+    }
+
+    .mobile-card-restantes {
+      font-size: 10px;
+      color: #80868b;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e8eaed;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f6368;
+    }
+
+    .modal-close:hover {
+      background: #f1f3f4;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #e8eaed;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .filter-section {
+      margin-bottom: 24px;
+    }
+
+    .filter-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .filter-section-header .material-icons {
+      font-size: 20px;
+      color: #1a73e8;
+    }
+
+    .filter-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #202124;
+    }
+
+    .periodo-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .periodo-col {
+      flex: 1;
+    }
+
+    .periodo-col label {
+      display: block;
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .periodo-col select {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .periodo-col select:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .month-chip {
+      padding: 10px 8px;
+      border: 1px solid #dadce0;
+      border-radius: 20px;
+      background: #fff;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      font-weight: 500;
+      color: #5f6368;
+    }
+
+    .month-chip:hover {
+      background: #f8f9fa;
+      border-color: #1a73e8;
+    }
+
+    .month-chip.active {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    .filter-select-group {
+      margin-bottom: 16px;
+    }
+
+    .filter-select-group label {
+      display: block;
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .filter-select {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+
+    .date-range-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .date-range-col {
+      flex: 1;
+    }
+
+    .date-range-col label {
+      display: block;
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .date-range-col input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .date-range-col input:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 9500;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .popup-overlay.active {
+      display: flex;
+    }
+
+    .popup-content {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      max-height: 80vh;
+      overflow: hidden;
+    }
+
+    .popup-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid #e8eaed;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .popup-header h3 {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .popup-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5f6368;
+    }
+
+    .popup-body {
+      padding: 8px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .cartao-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .cartao-option:hover {
+      background: #f8f9fa;
+    }
+
+    .cartao-option.selected {
+      background: #fff3e0;
+    }
+
+    .cartao-option .cartao-cor {
+      width: 36px;
+      height: 24px;
+      border-radius: 5px;
+      background: #5f6368;
+    }
+
+    .cartao-option .cartao-nome {
+      flex: 1;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .cartao-option .check-icon {
+      color: #f57c00;
+      display: none;
+    }
+
+    .cartao-option.selected .check-icon {
+      display: block;
+    }
+
+    .cartao-cor.nubank { background: #8A05BE; }
+    .cartao-cor.inter { background: #FF7A00; }
+    .cartao-cor.c6 { background: #1A1A1A; }
+    .cartao-cor.itau { background: #EC7000; }
+    .cartao-cor.bradesco { background: #CC092F; }
+    .cartao-cor.santander { background: #EC0000; }
+    .cartao-cor.bb { background: linear-gradient(135deg, #FFCC00, #003399); }
+    .cartao-cor.caixa { background: linear-gradient(135deg, #005CA9, #F37021); }
+    .cartao-cor.picpay { background: #21C25E; }
+    .cartao-cor.pagbank { background: #00A868; }
+    .cartao-cor.mercadopago { background: #00B1EA; }
+
+    .config-cartao-section {
+      display: none;
+      padding: 16px;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .config-cartao-section.show {
+      display: block;
+    }
+
+    .config-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .config-title .material-icons {
+      color: #9334e6;
+      font-size: 18px;
+    }
+
+    .config-fields {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .config-field {
+      flex: 1;
+    }
+
+    .config-field label {
+      display: block;
+      font-size: 10px;
+      color: #5f6368;
+      margin-bottom: 4px;
+    }
+
+    .config-field input {
+      width: 100%;
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .config-field input:focus {
+      outline: none;
+      border-color: #9334e6;
+    }
+
+    .btn-salvar-config {
+      width: 100%;
+      height: 40px;
+      background: #9334e6;
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-salvar-config:disabled {
+      opacity: 0.6;
+    }
+
+    .modal-edicao .modal {
+      padding: 20px;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      height: 46px;
+      padding: 0 14px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .loader-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,.95);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .loader-overlay.active {
+      display: flex;
+    }
+    
+    .loader-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e8eaed;
+      border-top-color: #1a73e8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 10000;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 90%;
+      text-align: center;
+    }
+    
+    .toast.show { opacity: 1; }
+    .toast.success { background: #0d652d; }
+    .toast.error { background: #c5221f; }
+
+    body.mobile-mode {
+      padding: 12px;
+      padding-bottom: 80px;
+    }
+
+    body.mobile-mode .top-bar {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    body.mobile-mode .top-btn {
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    body.mobile-mode .header {
+      padding: 14px;
+    }
+
+    body.mobile-mode h2 {
+      font-size: 17px;
+    }
+
+    body.mobile-mode .filters {
+      flex-direction: column;
+    }
+
+    body.mobile-mode .search-box {
+      min-width: 100%;
+    }
+
+    body.mobile-mode .filter-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+    }
+
+    body.mobile-mode .filter-group .btn {
+      width: 100%;
+    }
+
+    body.mobile-mode .financial-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    body.mobile-mode .fin-card {
+      min-width: unset;
+      max-width: unset;
+      padding: 10px 12px;
+    }
+
+    body.mobile-mode .fin-card.despesas-total { order: 1; }
+    body.mobile-mode .fin-card.fatura-cartao { order: 2; }
+    body.mobile-mode .fin-card.categoria { order: 3; grid-column: span 2; }
+    body.mobile-mode .fin-card.receita { order: 4; }
+    body.mobile-mode .fin-card.balanco { order: 5; }
+
+    body.mobile-mode .fin-card-value { font-size: 14px; }
+    body.mobile-mode .categoria-valor { font-size: 13px; }
+
+    body.mobile-mode .table-container { display: none; }
+    body.mobile-mode .mobile-cards-container { display: block; }
+
+    body.mobile-mode .content { padding: 12px; }
+    body.mobile-mode .content-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    body.mobile-mode .content-counters { width: 100%; justify-content: space-between; }
+
+    body.mobile-mode .modal-overlay,
+    body.mobile-mode .popup-overlay {
+      padding: 0;
+      align-items: flex-end;
+    }
+
+    body.mobile-mode .modal-edicao {
+      align-items: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px;
+    }
+
+    body.mobile-mode .modal-edicao .modal {
+      margin: 10px auto;
+      max-height: none;
+      border-radius: 12px;
+    }
+
+    body.mobile-mode .modal-edicao .form-group input,
+    body.mobile-mode .modal-edicao .form-group select {
+      height: 48px;
+      font-size: 16px;
+    }
+
+    body.mobile-mode .modal,
+    body.mobile-mode .popup-content {
+      max-width: 100%;
+      border-radius: 16px 16px 0 0;
+      max-height: 90vh;
+    }
+
+    body.mobile-mode .modal-footer {
+      flex-direction: column;
+    }
+
+    body.mobile-mode .modal-footer .btn {
+      width: 100%;
+    }
+
+    body.mobile-mode .modal-actions {
+      flex-direction: column;
+    }
+
+    body.mobile-mode .modal-actions .btn {
+      width: 100%;
+    }
+
+    body.mobile-mode .month-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    body.mobile-mode .cartao-visual .fatura-valor { font-size: 22px; }
+    body.mobile-mode .cartao-visual .detalhes-grid { flex-direction: column; gap: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- Barra de Status -->
-  <div id="statusBar" class="status-bar online">
-    <span id="statusIcon">🟢</span>
-    <span id="statusText">Online</span>
-    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
-  </div>
-
-  <!-- Botão Voltar -->
   <a class="back-button-fixed" href="./index.html">
     <span class="material-icons">arrow_back</span>
     Início
   </a>
 
-  <div class="container">
-    
-    <!-- Header -->
-    <div class="header">
+  <div class="top-bar">
+    <div class="auto-refresh-indicator" id="statusIndicator">
+      <span class="dot"></span>
+      <span id="statusText">Online</span>
+    </div>
+    <a href="./cadastro.html" class="top-btn cadastro">
+      <span class="material-icons">add_circle</span>
+      Cadastrar
+    </a>
+    <button type="button" class="top-btn config-cartao" id="btnConfigCartao">
+      <span class="material-icons">settings</span>
+      Config
+    </button>
+    <button type="button" class="top-btn refresh" id="btnRefresh" title="Atualizar">
+      <span class="material-icons">refresh</span>
+    </button>
+    <div class="top-btn mode-selector">
+      <span class="material-icons" id="modeIcon">computer</span>
+      <select id="modeSelect">
+        <option value="desktop">Desktop</option>
+        <option value="mobile">Mobile</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="header-top">
       <h2>📊 Visualizar Registros</h2>
     </div>
-
-    <!-- Filtros de Data -->
-    <div class="filter-section">
-      <div class="filter-row">
-        <div class="form-group">
-          <label>Data Início</label>
-          <input type="date" id="filtroInicio">
-        </div>
-        <div class="form-group">
-          <label>Data Fim</label>
-          <input type="date" id="filtroFim">
-        </div>
-        <button class="btn btn-primary" id="btnFiltrar">
-          <span class="material-icons">search</span>
+    <div class="filters">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Pesquisar...">
+        <span class="material-icons search-icon">search</span>
+      </div>
+      <div class="filter-group">
+        <button type="button" class="btn btn-secondary" id="btnFiltrar">
+          <span class="material-icons">tune</span>
+          Filtrar
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnLimpar">
+          <span class="material-icons">clear</span>
+          Limpar
         </button>
       </div>
     </div>
-
-    <!-- Cards de Resumo -->
-    <div class="summary-grid">
-      <div class="summary-card gastos">
-        <div class="label">💸 Gastos</div>
-        <div class="value" id="totalGastos">R$ 0</div>
-      </div>
-      <div class="summary-card receita">
-        <div class="label">💰 Receita</div>
-        <div class="value" id="totalReceita">R$ 0</div>
-      </div>
-      <div class="summary-card balanco">
-        <div class="label">📈 Balanço</div>
-        <div class="value" id="totalBalanco">R$ 0</div>
-      </div>
-      <div class="summary-card fatura">
-        <div class="label">💳 Fatura</div>
-        <div class="value" id="totalFatura">R$ 0</div>
-      </div>
-    </div>
-
-    <!-- Tabs de Filtro -->
-    <div class="tabs-filter">
-      <button class="tab-filter active" data-filter="todos">Todos</button>
-      <button class="tab-filter" data-filter="gastos">Gastos</button>
-      <button class="tab-filter" data-filter="investimento">Investimento</button>
-      <button class="tab-filter" data-filter="cartao">Cartão</button>
-    </div>
-
-    <!-- Lista de Registros -->
-    <div class="list-section">
-      <div class="list-header">
-        <div class="list-title">
-          <span class="material-icons">receipt_long</span>
-          Registros
-        </div>
-        <span class="list-count" id="countRegistros">0 registros</span>
-      </div>
-      <div class="list-body" id="listaRegistros" style="max-height: none;">
-        <div class="empty-state">
-          <span class="material-icons">hourglass_empty</span>
-          <p>Carregando registros...</p>
-        </div>
-      </div>
-    </div>
-
+    <div class="active-filters" id="activeFilters"></div>
   </div>
 
-  <!-- Modal de Edição -->
-  <div class="modal-overlay" id="modalEditar">
+  <div class="financial-cards">
+    <div class="fin-card despesas-total">
+      <div class="fin-card-header">
+        <span class="fin-card-emoji">💸</span>
+        <span class="fin-card-title">Despesas</span>
+      </div>
+      <div class="fin-card-value" id="cardDespesasTotal">R$ 0,00</div>
+    </div>
+    
+    <div class="fin-card categoria">
+      <div class="fin-card-header">
+        <span class="fin-card-emoji">📊</span>
+        <span class="fin-card-title">Por Categoria</span>
+      </div>
+      <div class="categoria-grid">
+        <div class="categoria-item">
+          <div class="categoria-label">Gastos</div>
+          <div class="categoria-valor" id="cardCategoriaGastos">R$ 0,00</div>
+        </div>
+        <div class="categoria-item">
+          <div class="categoria-label">Investimento</div>
+          <div class="categoria-valor invest" id="cardCategoriaInvestimento">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="fin-card fatura-cartao" id="cardFaturaClick">
+      <div class="fin-card-header">
+        <span class="fin-card-emoji">💳</span>
+        <span class="fin-card-title" id="faturaTitle">Fatura</span>
+      </div>
+      <div class="fin-card-value" id="cardFaturaCartao">R$ 0,00</div>
+      <div class="click-hint">
+        <span class="material-icons">touch_app</span>
+        Selecionar cartão
+      </div>
+    </div>
+    
+    <div class="fin-card receita">
+      <div class="fin-card-header">
+        <span class="fin-card-emoji">🏪</span>
+        <span class="fin-card-title">Receita</span>
+      </div>
+      <div class="fin-card-value" id="cardReceitaLoja">R$ 0,00</div>
+    </div>
+    
+    <div class="fin-card balanco" id="cardBalancoContainer">
+      <div class="fin-card-header">
+        <span class="fin-card-emoji">⚖️</span>
+        <span class="fin-card-title">Balanço</span>
+      </div>
+      <div class="fin-card-value" id="cardBalanco">R$ 0,00</div>
+    </div>
+  </div>
+
+  <div class="cartao-visual-section" id="cartaoVisualSection">
+    <div class="cartao-visual" id="cartaoVisual">
+      <button type="button" class="btn-fechar" id="btnFecharCartao">
+        <span class="material-icons">close</span>
+      </button>
+      <div class="chip"></div>
+      <div class="nome" id="cartaoNome">CARTÃO</div>
+      <div class="fatura-label">Fatura do Período</div>
+      <div class="fatura-valor" id="cartaoFatura">R$ 0,00</div>
+      <div class="detalhes-grid">
+        <div class="detalhe-item">
+          <div class="detalhe-label">🛒 Gastos</div>
+          <div class="detalhe-valor" id="cartaoGastos">R$ 0,00</div>
+        </div>
+        <div class="detalhe-item">
+          <div class="detalhe-label">📈 Investimento</div>
+          <div class="detalhe-valor" id="cartaoInvestimento">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="content-header">
+      <div class="content-title">
+        <span class="material-icons">receipt_long</span>
+        Registros
+      </div>
+      <div class="content-counters">
+        <div class="counter-item">
+          <span>📋</span>
+          <span>Total:</span>
+          <span class="counter-value" id="totalRegistros">0</span>
+        </div>
+        <div class="counter-item">
+          <span>👁️</span>
+          <span>Exibindo:</span>
+          <span class="counter-value" id="registrosVisiveis">0</span>
+        </div>
+      </div>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Método</th>
+            <th>Cartão</th>
+            <th>Parc.</th>
+            <th>Valor</th>
+            <th>Mês</th>
+            <th>Rest.</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr><td colspan="11" class="empty-state"><span class="material-icons">hourglass_empty</span><p>Carregando...</p></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mobile-cards-container" id="mobileCardsContainer"></div>
+  </div>
+
+  <!-- Modal Filtro -->
+  <div class="modal-overlay" id="modalFiltro">
     <div class="modal">
       <div class="modal-header">
-        <h3><span class="material-icons">edit</span> Editar Registro</h3>
-        <button class="modal-close" id="btnFecharEditar">
+        <h3><span class="material-icons">tune</span> Filtros</h3>
+        <button type="button" class="modal-close" id="closeFiltro">
           <span class="material-icons">close</span>
         </button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="editLinha">
-        
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="editData">
+        <div class="filter-section">
+          <div class="filter-section-header">
+            <span class="material-icons">date_range</span>
+            <span class="filter-section-title">Período</span>
+          </div>
+          
+          <div class="periodo-row">
+            <div class="periodo-col">
+              <label>Ano</label>
+              <select id="filtroAno">
+                <option value="">Todos</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="month-grid" id="monthGrid">
+            <button type="button" class="month-chip" data-mes="0">Jan</button>
+            <button type="button" class="month-chip" data-mes="1">Fev</button>
+            <button type="button" class="month-chip" data-mes="2">Mar</button>
+            <button type="button" class="month-chip" data-mes="3">Abr</button>
+            <button type="button" class="month-chip" data-mes="4">Mai</button>
+            <button type="button" class="month-chip" data-mes="5">Jun</button>
+            <button type="button" class="month-chip" data-mes="6">Jul</button>
+            <button type="button" class="month-chip" data-mes="7">Ago</button>
+            <button type="button" class="month-chip" data-mes="8">Set</button>
+            <button type="button" class="month-chip" data-mes="9">Out</button>
+            <button type="button" class="month-chip" data-mes="10">Nov</button>
+            <button type="button" class="month-chip" data-mes="11">Dez</button>
+          </div>
         </div>
-        
-        <div class="form-group">
-          <label>Tipo</label>
-          <select id="editTipo">
-            <option value="gastos">Gastos</option>
-            <option value="investimento">Investimento</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>Categoria</label>
-          <input type="text" id="editCategoria">
-        </div>
-        
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" id="editDescricao">
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>Método</label>
-            <select id="editMetodo">
-              <option value="dinheiro">Dinheiro</option>
-              <option value="pix">Pix</option>
-              <option value="cartaoCredito">Cartão de Crédito</option>
-              <option value="cartaoDebito">Cartão de Débito</option>
+
+        <div class="filter-section">
+          <div class="filter-section-header">
+            <span class="material-icons">category</span>
+            <span class="filter-section-title">Filtros Adicionais</span>
+          </div>
+          
+          <div class="filter-select-group">
+            <label>Tipo</label>
+            <select class="filter-select" id="filtroTipo">
+              <option value="">Todos os tipos</option>
+              <option value="gastos">Gastos</option>
+              <option value="investimento">Investimento</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Valor</label>
-            <input type="text" id="editValor" inputmode="decimal">
+
+          <div class="filter-select-group">
+            <label>Categoria</label>
+            <select class="filter-select" id="filtroCategoria">
+              <option value="">Todas as categorias</option>
+            </select>
+          </div>
+          
+          <div class="filter-select-group">
+            <label>Cartão</label>
+            <select class="filter-select" id="filtroCartaoSelect">
+              <option value="">Todos os cartões</option>
+            </select>
           </div>
         </div>
-        
-        <div class="form-row" id="editCartaoRow">
-          <div class="form-group">
-            <label>Cartão</label>
-            <input type="text" id="editCartao">
+
+        <div class="filter-section">
+          <div class="filter-section-header">
+            <span class="material-icons">calendar_today</span>
+            <span class="filter-section-title">Data Personalizada</span>
           </div>
-          <div class="form-group">
-            <label>Parcelas</label>
-            <input type="text" id="editParcelas" readonly>
+          
+          <div class="date-range-row">
+            <div class="date-range-col">
+              <label>Data Início</label>
+              <input type="date" id="dataInicio">
+            </div>
+            <div class="date-range-col">
+              <label>Data Fim</label>
+              <input type="date" id="dataFim">
+            </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelarEditar">Cancelar</button>
-        <button class="btn btn-primary" id="btnSalvarEditar">
+        <button type="button" class="btn btn-secondary" id="btnLimparFiltros">
+          <span class="material-icons">clear_all</span>
+          Limpar Tudo
+        </button>
+        <button type="button" class="btn btn-primary" id="btnAplicarFiltro">
+          <span class="material-icons">check</span>
+          Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Seletor Cartão -->
+  <div class="popup-overlay" id="popupSeletorCartao">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h3>💳 Selecionar Cartão</h3>
+        <button type="button" class="popup-close" id="closeSeletorCartao">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="popup-body" id="listaCartoes"></div>
+    </div>
+  </div>
+
+  <!-- Popup Config Cartão -->
+  <div class="popup-overlay" id="popupConfigCartao">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h3>⚙️ Configurar Cartão</h3>
+        <button type="button" class="popup-close" id="closeConfigCartao">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="popup-body">
+        <div class="form-group">
+          <label>Selecione o Cartão</label>
+          <select id="configSelectCartao">
+            <option value="">Escolher...</option>
+          </select>
+        </div>
+      </div>
+      <div class="config-cartao-section" id="configCartaoSection">
+        <div class="config-title">
+          <span class="material-icons">settings</span>
+          Configurar Datas
+        </div>
+        <div class="config-fields">
+          <div class="config-field">
+            <label>Dia Fechamento</label>
+            <input type="number" id="configFechamento" min="1" max="31" placeholder="Ex: 15">
+          </div>
+          <div class="config-field">
+            <label>Dia Vencimento</label>
+            <input type="number" id="configVencimento" min="1" max="31" placeholder="Ex: 22">
+          </div>
+        </div>
+        <button type="button" class="btn-salvar-config" id="btnSalvarConfigCartao">
           <span class="material-icons">save</span>
           Salvar
         </button>
@@ -285,449 +1831,1174 @@
     </div>
   </div>
 
-  <!-- Modal de Exclusão -->
-  <div class="modal-overlay" id="modalExcluir">
+  <!-- Modal Edição -->
+  <div class="modal-overlay modal-edicao" id="modalEdicao">
     <div class="modal">
-      <div class="modal-header">
-        <h3><span class="material-icons">delete</span> Excluir Registro</h3>
-        <button class="modal-close" id="btnFecharExcluir">
-          <span class="material-icons">close</span>
-        </button>
+      <div class="modal-title">✏️ Editar Registro</div>
+      <div class="form-group">
+        <label>Data</label>
+        <input type="date" id="editData">
       </div>
-      <div class="modal-body">
-        <p style="text-align: center; margin-bottom: 16px;">Tem certeza que deseja excluir este registro?</p>
-        <div class="registro-card" id="cardExcluir" style="cursor: default;"></div>
-        <input type="hidden" id="excluirLinha">
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="editTipo">
+          <option value="Categoria Gastos">Categoria Gastos</option>
+          <option value="Categoria Investimento">Categoria Investimento</option>
+        </select>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelarExcluir">Cancelar</button>
-        <button class="btn btn-danger" id="btnConfirmarExcluir">
-          <span class="material-icons">delete</span>
-          Excluir
-        </button>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="editCategoria"><option value="">Selecione</option></select>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="editDescricao">
+      </div>
+      <div class="form-group">
+        <label>Método de Pagamento</label>
+        <select id="editMetodo">
+          <option value="DINHEIRO">Dinheiro</option>
+          <option value="PIX">Pix</option>
+          <option value="CARTÃO">Cartão Crédito</option>
+          <option value="CARTÃO DE DÉBITO">Cartão Débito</option>
+        </select>
+      </div>
+      <div class="form-group" id="cartaoGroup" style="display:none">
+        <label>Cartão</label>
+        <select id="editCartao"><option value="">Selecione</option></select>
+      </div>
+      <div class="form-group" id="parcelasGroup" style="display:none">
+        <label>Parcelas</label>
+        <input type="number" id="editParcelas" min="1" max="12" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label>Valor</label>
+        <input type="text" id="editValor" inputmode="decimal">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelarEdicao">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnSalvarEdicao">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Confirmação -->
+  <div class="modal-overlay" id="modalConfirmacao">
+    <div class="modal" style="max-width:360px; padding: 20px;">
+      <div class="modal-title">⚠️ Confirmar Exclusão</div>
+      <p style="margin-bottom:16px;color:#5f6368">Deseja excluir este registro?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="btnCancelarExclusao">Cancelar</button>
+        <button type="button" class="btn btn-primary" style="background:#ea4335" id="btnConfirmarExclusao">Excluir</button>
       </div>
     </div>
   </div>
 
   <!-- Loader -->
-  <div class="loader-overlay" id="loaderOverlay">
-    <div class="spinner"></div>
-    <div class="loader-text">Carregando...</div>
+  <div class="loader-overlay" id="loader">
+    <div class="loader-spinner"></div>
   </div>
 
   <!-- Toast -->
-  <div id="toastContainer" class="toast-container"></div>
+  <div class="toast" id="toast"></div>
 
-  <!-- Scripts -->
-  <script src="./app.js"></script>
+<script>
+// ========================================
+// CONFIGURAÇÃO DA API
+// ========================================
+const API_URL = localStorage.getItem('API_URL') || '';
+
+// ========================================
+// ESTADO
+// ========================================
+var registrosBrutos = [];
+var registrosAgrupados = [];
+var filtrados = [];
+var cartoes = [];
+var categorias = { gastos: [], investimento: [] };
+var editando = null;
+var linhaExcluir = null;
+
+var filtrosAtivos = {
+  ano: null,
+  meses: [],
+  tipo: null,
+  categoria: null,
+  cartao: null,
+  dataInicio: null,
+  dataFim: null
+};
+
+var filtroCartaoVisual = null;
+var receita = 0;
+var modo = 'desktop';
+var debounceId = null;
+
+var emojisCategoria = {
+  'internet': '🌐', 'alimentação': '🍔', 'alimentacao': '🍔', 'comida': '🍔',
+  'transporte': '🚗', 'uber': '🚕', 'combustível': '⛽', 'gasolina': '⛽',
+  'saúde': '🏥', 'saude': '🏥', 'farmácia': '💊', 'médico': '👨‍⚕️',
+  'educação': '📚', 'educacao': '📚', 'curso': '📖',
+  'lazer': '🎮', 'entretenimento': '🎬', 'streaming': '📺', 'netflix': '📺',
+  'moradia': '🏠', 'aluguel': '🏠', 'condomínio': '🏢',
+  'luz': '💡', 'energia': '💡', 'água': '💧', 'gás': '🔥',
+  'telefone': '📱', 'celular': '📱',
+  'roupa': '👕', 'vestuário': '👗', 'shopping': '🛍️',
+  'mercado': '🛒', 'supermercado': '🛒', 'compras': '🛒',
+  'pet': '🐕', 'animal': '🐾',
+  'assinatura': '📝', 'mensalidade': '📝',
+  'investimento': '📈', 'poupança': '🏦', 'ações': '📊',
+  'presente': '🎁', 'doação': '❤️',
+  'viagem': '✈️', 'férias': '🏖️', 'hotel': '🏨',
+  'serviço': '🔧', 'manutenção': '🔧',
+  'beleza': '💅', 'salão': '💇',
+  'default': '📌'
+};
+
+var coresCartoes = {
+  'nubank': 'nubank', 'inter': 'inter', 'c6': 'c6', 'c6 bank': 'c6',
+  'itau': 'itau', 'itaú': 'itau', 'bradesco': 'bradesco', 'santander': 'santander',
+  'banco do brasil': 'bb', 'bb': 'bb', 'caixa': 'caixa', 'picpay': 'picpay',
+  'pagbank': 'pagbank', 'pagseguro': 'pagbank', 'mercado pago': 'mercadopago', 'mercadopago': 'mercadopago'
+};
+
+var mesesNomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+// ========================================
+// HELPERS
+// ========================================
+var $ = function(id) { return document.getElementById(id); };
+
+function normalizarTexto(texto) {
+  if (!texto) return '';
+  return texto.toString().toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function obterClasseCartao(nome) {
+  if (!nome) return '';
+  var n = normalizarTexto(nome);
+  for (var k in coresCartoes) {
+    if (n.indexOf(k) > -1) return coresCartoes[k];
+  }
+  return '';
+}
+
+function obterEmojiCategoria(cat) {
+  if (!cat) return emojisCategoria['default'];
+  var c = normalizarTexto(cat);
+  for (var k in emojisCategoria) {
+    if (c.indexOf(k) > -1) return emojisCategoria[k];
+  }
+  return emojisCategoria['default'];
+}
+
+function compararCartoes(cartao1, cartao2) {
+  return normalizarTexto(cartao1) === normalizarTexto(cartao2);
+}
+
+function formatarMoeda(v) {
+  return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function formatarData(d) {
+  if (!d) return '-';
+  if (typeof d === 'string' && d.indexOf('/') > -1) return d;
+  var dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+}
+
+function mostrarLoader(v) {
+  $('loader').classList.toggle('active', v);
+}
+
+function mostrarToast(msg, tipo) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (tipo || '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function atualizarStatusOnline() {
+  var ind = $('statusIndicator');
+  var txt = $('statusText');
+  if (navigator.onLine) {
+    ind.classList.remove('offline');
+    txt.textContent = 'Online';
+  } else {
+    ind.classList.add('offline');
+    txt.textContent = 'Offline';
+  }
+}
+
+// ========================================
+// API - CHAMADAS
+// ========================================
+async function apiRequest(acao, params = {}) {
+  if (!API_URL) {
+    throw new Error('URL da API não configurada');
+  }
   
-  <script>
-  (function() {
-    'use strict';
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: JSON.stringify({ acao, ...params })
+    });
     
-    // ========== ESTADO ==========
-    let registros = [];
-    let registrosFiltrados = [];
-    let filtroAtual = 'todos';
-    let receita = 0;
-    
-    // ========== ELEMENTOS ==========
-    const els = {
-      filtroInicio: document.getElementById('filtroInicio'),
-      filtroFim: document.getElementById('filtroFim'),
-      btnFiltrar: document.getElementById('btnFiltrar'),
-      totalGastos: document.getElementById('totalGastos'),
-      totalReceita: document.getElementById('totalReceita'),
-      totalBalanco: document.getElementById('totalBalanco'),
-      totalFatura: document.getElementById('totalFatura'),
-      countRegistros: document.getElementById('countRegistros'),
-      listaRegistros: document.getElementById('listaRegistros'),
-      modalEditar: document.getElementById('modalEditar'),
-      modalExcluir: document.getElementById('modalExcluir')
-    };
-    
-    // ========== INICIALIZAÇÃO ==========
-    async function init() {
-      console.log('[Visualizador] Inicializando...');
-      
-      setFiltroMesAtual();
-      setupEventos();
-      await carregarDados();
-      
-      console.log('[Visualizador] Pronto!');
-    }
-    
-    function setFiltroMesAtual() {
-      const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-      
-      els.filtroInicio.value = `${ano}-${mes}-01`;
-      
-      const ultimoDia = new Date(ano, hoje.getMonth() + 1, 0).getDate();
-      els.filtroFim.value = `${ano}-${mes}-${ultimoDia}`;
-    }
-    
-    // ========== CARREGAR DADOS ==========
-    async function carregarDados() {
-      const App = window.FinanceiroApp;
-      
-      // Converte datas para formato DD/MM/YYYY
-      const inicio = formatarDataBR(els.filtroInicio.value);
-      const fim = formatarDataBR(els.filtroFim.value);
-      
-      // Tenta carregar do cache primeiro
-      const cacheKey = `registros_${els.filtroInicio.value}_${els.filtroFim.value}`;
-      const cached = await App.getCachedData(cacheKey);
-      
-      if (cached) {
-        registros = cached.registros || [];
-        receita = cached.receita || 0;
-        aplicarFiltro();
-      }
-      
-      // Se online, busca da API
-      if (navigator.onLine) {
-        App.showLoader(true, 'Carregando registros...');
-        
-        try {
-          const result = await App.apiRequest('listarRegistros', {
-            filtroDataInicio: inicio,
-            filtroDataFim: fim
-          });
-          
-          if (result.success) {
-            registros = result.registros || [];
-            
-            // Busca receita
-            const receitaResult = await App.apiRequest('obterReceitaLoja', {
-              filtroDataInicio: inicio,
-              filtroDataFim: fim
-            });
-            
-            if (receitaResult.success) {
-              receita = receitaResult.receita || 0;
-            }
-            
-            // Salva no cache
-            await App.cacheData(cacheKey, { registros, receita }, 300000); // 5 minutos
-            
-            aplicarFiltro();
-          } else {
-            App.showToast(result.error || 'Erro ao carregar', 'error');
-          }
-        } catch (error) {
-          console.error('[Visualizador] Erro:', error);
-          App.showToast('Erro ao carregar dados', 'error');
-        } finally {
-          App.showLoader(false);
-        }
-      } else if (!cached) {
-        els.listaRegistros.innerHTML = `
-          <div class="empty-state">
-            <span class="material-icons">cloud_off</span>
-            <p>Sem conexão. Dados não disponíveis offline.</p>
-          </div>
-        `;
-      }
-    }
-    
-    function formatarDataBR(dataISO) {
-      if (!dataISO) return '';
-      const partes = dataISO.split('-');
-      return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
-    
-    // ========== FILTROS ==========
-    function aplicarFiltro() {
-      if (filtroAtual === 'todos') {
-        registrosFiltrados = [...registros];
-      } else if (filtroAtual === 'cartao') {
-        registrosFiltrados = registros.filter(r => 
-          r.metodoPagamento === 'cartaoCredito' || r.nomeCartao
-        );
-      } else {
-        registrosFiltrados = registros.filter(r => r.tipoCategoria === filtroAtual);
-      }
-      
-      atualizarResumo();
-      renderizarLista();
-    }
-    
-    function atualizarResumo() {
-      const App = window.FinanceiroApp;
-      
-      let totalG = 0, totalF = 0;
-      
-      for (const r of registros) {
-        if (r.tipoCategoria === 'gastos') {
-          totalG += r.preco || 0;
-        }
-        if (r.metodoPagamento === 'cartaoCredito' || r.nomeCartao) {
-          totalF += r.preco || 0;
-        }
-      }
-      
-      const balanco = receita - totalG;
-      
-      els.totalGastos.textContent = App.formatMoney(totalG);
-      els.totalReceita.textContent = App.formatMoney(receita);
-      els.totalBalanco.textContent = App.formatMoney(balanco);
-      els.totalBalanco.style.color = balanco >= 0 ? '#34a853' : '#ea4335';
-      els.totalFatura.textContent = App.formatMoney(totalF);
-    }
-    
-    // ========== RENDERIZAÇÃO ==========
-    function renderizarLista() {
-      const App = window.FinanceiroApp;
-      const n = registrosFiltrados.length;
-      
-      els.countRegistros.textContent = `${n} registro${n !== 1 ? 's' : ''}`;
-      
-      if (n === 0) {
-        els.listaRegistros.innerHTML = `
-          <div class="empty-state">
-            <span class="material-icons">inbox</span>
-            <p>Nenhum registro encontrado</p>
-          </div>
-        `;
-        return;
-      }
-      
-      let html = '';
-      
-      for (const r of registrosFiltrados) {
-        const isGastos = r.tipoCategoria === 'gastos';
-        const cardClass = App.getCardColorClass(r.nomeCartao);
-        
-        html += `
-          <div class="registro-card tipo-${r.tipoCategoria}" data-linha="${r.linha}" onclick="abrirRegistro(${r.linha})">
-            <div class="registro-card-actions">
-              <button class="action-btn edit" onclick="event.stopPropagation(); abrirEditar(${r.linha})">
-                <span class="material-icons">edit</span>
-              </button>
-              <button class="action-btn delete" onclick="event.stopPropagation(); abrirExcluir(${r.linha})">
-                <span class="material-icons">delete</span>
-              </button>
-            </div>
-            <div class="registro-card-top">
-              <span class="badge badge-${r.tipoCategoria}">${isGastos ? 'Gastos' : 'Invest.'}</span>
-              ${r.nomeCartao ? `<span class="badge badge-cartao ${cardClass}">${r.nomeCartao}</span>` : ''}
-              <span class="registro-card-data">${r.data || '-'}</span>
-            </div>
-            <div class="registro-card-descricao">${r.descricao || r.categoria || '-'}</div>
-            <div class="registro-card-categoria">${r.categoria || '-'}</div>
-            <div class="registro-card-footer">
-              <div class="registro-card-metodo">
-                <span class="material-icons">${getMetodoIcon(r.metodoPagamento)}</span>
-                ${getMetodoNome(r.metodoPagamento)}
-                ${r.parcela ? `<span class="registro-card-parcelas">${r.parcela}</span>` : ''}
-              </div>
-              <div class="registro-card-valor ${r.tipoCategoria}">${App.formatMoney(r.preco)}</div>
-            </div>
-          </div>
-        `;
-      }
-      
-      els.listaRegistros.innerHTML = html;
-    }
-    
-    function getMetodoIcon(m) {
-      if (m === 'cartaoCredito' || m === 'cartaoDebito') return 'credit_card';
-      if (m === 'pix') return 'pix';
-      return 'payments';
-    }
-    
-    function getMetodoNome(m) {
-      if (m === 'cartaoCredito') return 'Crédito';
-      if (m === 'cartaoDebito') return 'Débito';
-      if (m === 'pix') return 'Pix';
-      if (m === 'dinheiro') return 'Dinheiro';
-      return m || '-';
-    }
-    
-    // ========== EVENTOS ==========
-    function setupEventos() {
-      // Filtrar por data
-      els.btnFiltrar.addEventListener('click', carregarDados);
-      
-      // Tabs de filtro
-      document.querySelectorAll('.tab-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tab-filter').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          filtroAtual = btn.dataset.filter;
-          aplicarFiltro();
-        });
-      });
-      
-      // Modal editar
-      document.getElementById('btnFecharEditar').addEventListener('click', fecharEditar);
-      document.getElementById('btnCancelarEditar').addEventListener('click', fecharEditar);
-      document.getElementById('btnSalvarEditar').addEventListener('click', salvarEdicao);
-      document.getElementById('editValor').addEventListener('input', (e) => {
-        window.FinanceiroApp.maskMoney(e);
-      });
-      document.getElementById('editMetodo').addEventListener('change', () => {
-        const isCartao = document.getElementById('editMetodo').value === 'cartaoCredito';
-        document.getElementById('editCartaoRow').style.display = isCartao ? 'flex' : 'none';
-      });
-      
-      // Modal excluir
-      document.getElementById('btnFecharExcluir').addEventListener('click', fecharExcluir);
-      document.getElementById('btnCancelarExcluir').addEventListener('click', fecharExcluir);
-      document.getElementById('btnConfirmarExcluir').addEventListener('click', confirmarExclusao);
-    }
-    
-    // ========== EDITAR ==========
-    window.abrirRegistro = function(linha) {
-      // Por enquanto, abre edição
-      abrirEditar(linha);
-    };
-    
-    window.abrirEditar = function(linha) {
-      const App = window.FinanceiroApp;
-      const r = registros.find(x => x.linha === linha);
-      if (!r) return;
-      
-      document.getElementById('editLinha').value = linha;
-      document.getElementById('editData').value = App.dateToISO(r.data);
-      document.getElementById('editTipo').value = r.tipoCategoria || 'gastos';
-      document.getElementById('editCategoria').value = r.categoria || '';
-      document.getElementById('editDescricao').value = r.descricao || '';
-      document.getElementById('editMetodo').value = r.metodoPagamento || 'dinheiro';
-      document.getElementById('editValor').value = App.formatMoney(r.preco);
-      document.getElementById('editCartao').value = r.nomeCartao || '';
-      document.getElementById('editParcelas').value = r.parcela || '';
-      
-      const isCartao = r.metodoPagamento === 'cartaoCredito';
-      document.getElementById('editCartaoRow').style.display = isCartao ? 'flex' : 'none';
-      
-      els.modalEditar.classList.add('active');
-    };
-    
-    function fecharEditar() {
-      els.modalEditar.classList.remove('active');
-    }
-    
-    async function salvarEdicao() {
-      const App = window.FinanceiroApp;
-      
-      const linha = parseInt(document.getElementById('editLinha').value);
-      const data = document.getElementById('editData').value;
-      
-      const registro = {
-        linha: linha,
-        data: formatarDataBR(data),
-        tipoCategoria: document.getElementById('editTipo').value,
-        categoria: document.getElementById('editCategoria').value,
-        descricao: document.getElementById('editDescricao').value,
-        metodoPagamento: document.getElementById('editMetodo').value,
-        preco: App.parseMoney(document.getElementById('editValor').value),
-        nomeCartao: document.getElementById('editCartao').value
-      };
-      
-      App.showLoader(true, 'Salvando...');
-      
-      try {
-        const result = await App.executeOperation('editarRegistro', { registro });
-        
-        if (result.success) {
-          fecharEditar();
-          
-          if (result.offline) {
-            // Atualiza localmente
-            const idx = registros.findIndex(r => r.linha === linha);
-            if (idx !== -1) {
-              registros[idx] = { ...registros[idx], ...registro };
-              aplicarFiltro();
-            }
-            App.showToast('Salvo offline!', 'warning');
-          } else {
-            App.showToast('Registro atualizado!', 'success');
-            await carregarDados();
-          }
-        } else {
-          App.showToast(result.error || 'Erro ao salvar', 'error');
-        }
-      } catch (error) {
-        App.showToast('Erro: ' + error.message, 'error');
-      } finally {
-        App.showLoader(false);
-      }
-    }
-    
-    // ========== EXCLUIR ==========
-    window.abrirExcluir = function(linha) {
-      const App = window.FinanceiroApp;
-      const r = registros.find(x => x.linha === linha);
-      if (!r) return;
-      
-      document.getElementById('excluirLinha').value = linha;
-      
-      const cardClass = App.getCardColorClass(r.nomeCartao);
-      
-      document.getElementById('cardExcluir').innerHTML = `
-        <div class="registro-card-top">
-          <span class="badge badge-${r.tipoCategoria}">${r.tipoCategoria === 'gastos' ? 'Gastos' : 'Invest.'}</span>
-          ${r.nomeCartao ? `<span class="badge badge-cartao ${cardClass}">${r.nomeCartao}</span>` : ''}
-          <span class="registro-card-data">${r.data || '-'}</span>
-        </div>
-        <div class="registro-card-descricao">${r.descricao || r.categoria || '-'}</div>
-        <div class="registro-card-footer">
-          <div class="registro-card-metodo">${getMetodoNome(r.metodoPagamento)}</div>
-          <div class="registro-card-valor ${r.tipoCategoria}">${App.formatMoney(r.preco)}</div>
-        </div>
-      `;
-      document.getElementById('cardExcluir').className = `registro-card tipo-${r.tipoCategoria}`;
-      
-      els.modalExcluir.classList.add('active');
-    };
-    
-    function fecharExcluir() {
-      els.modalExcluir.classList.remove('active');
-    }
-    
-    async function confirmarExclusao() {
-      const App = window.FinanceiroApp;
-      const linha = parseInt(document.getElementById('excluirLinha').value);
-      
-      App.showLoader(true, 'Excluindo...');
-      
-      try {
-        const result = await App.executeOperation('excluirRegistro', { linha });
-        
-        if (result.success) {
-          fecharExcluir();
-          
-          if (result.offline) {
-            // Remove localmente
-            registros = registros.filter(r => r.linha !== linha);
-            aplicarFiltro();
-            App.showToast('Exclusão salva offline!', 'warning');
-          } else {
-            App.showToast('Registro excluído!', 'success');
-            await carregarDados();
-          }
-        } else {
-          App.showToast(result.error || 'Erro ao excluir', 'error');
-        }
-      } catch (error) {
-        App.showToast('Erro: ' + error.message, 'error');
-      } finally {
-        App.showLoader(false);
-      }
-    }
-    
-    // ========== INICIAR ==========
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-    
-  })();
-  </script>
+    const text = await response.text();
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Erro na API:', error);
+    throw error;
+  }
+}
 
+// ========================================
+// INIT
+// ========================================
+function init() {
+  modo = window.innerWidth <= 768 ? 'mobile' : 'desktop';
+  $('modeSelect').value = modo;
+  
+  var anoAtual = new Date().getFullYear().toString();
+  $('filtroAno').value = anoAtual;
+  filtrosAtivos.ano = anoAtual;
+  filtrosAtivos.meses = [];
+  
+  aplicarModo();
+  setupEventos();
+  atualizarStatusOnline();
+  atualizarBotaoFiltro();
+  atualizarChipsFiltros();
+  carregarDados();
+  
+  window.addEventListener('online', atualizarStatusOnline);
+  window.addEventListener('offline', atualizarStatusOnline);
+}
+
+function aplicarModo() {
+  document.body.classList.toggle('mobile-mode', modo === 'mobile');
+  $('modeIcon').textContent = modo === 'mobile' ? 'smartphone' : 'computer';
+}
+
+// ========================================
+// SETUP EVENTOS
+// ========================================
+function setupEventos() {
+  $('modeSelect').addEventListener('change', function() {
+    modo = this.value;
+    aplicarModo();
+    renderizar();
+  });
+
+  $('btnRefresh').addEventListener('click', function() {
+    var btn = this;
+    btn.classList.add('loading');
+    carregarDados(true);
+    setTimeout(function() { btn.classList.remove('loading'); }, 1000);
+  });
+
+  $('btnFiltrar').addEventListener('click', function() {
+    $('modalFiltro').classList.add('active');
+  });
+
+  $('closeFiltro').addEventListener('click', function() {
+    $('modalFiltro').classList.remove('active');
+  });
+
+  $('modalFiltro').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+
+  $('monthGrid').addEventListener('click', function(e) {
+    var chip = e.target.closest('.month-chip');
+    if (chip) chip.classList.toggle('active');
+  });
+
+  $('filtroTipo').addEventListener('change', carregarCategoriasParaFiltro);
+  $('btnAplicarFiltro').addEventListener('click', aplicarFiltros);
+  $('btnLimparFiltros').addEventListener('click', limparTodosFiltros);
+  $('btnLimpar').addEventListener('click', limparTodosFiltros);
+
+  $('cardFaturaClick').addEventListener('click', abrirSeletorCartao);
+  $('closeSeletorCartao').addEventListener('click', function() {
+    $('popupSeletorCartao').classList.remove('active');
+  });
+  $('popupSeletorCartao').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+
+  $('btnConfigCartao').addEventListener('click', function() {
+    $('popupConfigCartao').classList.add('active');
+    preencherSelectConfigCartao();
+  });
+  $('closeConfigCartao').addEventListener('click', function() {
+    $('popupConfigCartao').classList.remove('active');
+  });
+  $('popupConfigCartao').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('active');
+  });
+  $('configSelectCartao').addEventListener('change', carregarConfigCartaoSelecionado);
+  $('btnSalvarConfigCartao').addEventListener('click', salvarConfigCartao);
+
+  $('searchInput').addEventListener('input', function() {
+    if (debounceId) clearTimeout(debounceId);
+    debounceId = setTimeout(function() { aplicarFiltrosLocais(); }, 300);
+  });
+
+  $('btnCancelarEdicao').addEventListener('click', fecharEdicao);
+  $('btnSalvarEdicao').addEventListener('click', salvarEdicao);
+  $('btnCancelarExclusao').addEventListener('click', fecharExclusao);
+  $('btnConfirmarExclusao').addEventListener('click', executarExclusao);
+
+  $('btnFecharCartao').addEventListener('click', function() {
+    filtroCartaoVisual = null;
+    $('cartaoVisualSection').classList.remove('show');
+    $('faturaTitle').textContent = 'Fatura';
+    calcularCards();
+  });
+
+  $('editTipo').addEventListener('change', carregarCategorias);
+  $('editMetodo').addEventListener('change', function() {
+    var isCartao = this.value === 'CARTÃO';
+    $('parcelasGroup').style.display = isCartao ? 'block' : 'none';
+    $('cartaoGroup').style.display = isCartao ? 'block' : 'none';
+  });
+  $('editValor').addEventListener('input', function() {
+    var v = this.value.replace(/\D/g, '');
+    this.value = 'R$ ' + ((parseInt(v) || 0) / 100).toFixed(2).replace('.', ',');
+  });
+
+  $('modalEdicao').addEventListener('click', function(e) { if (e.target === this) fecharEdicao(); });
+  $('modalConfirmacao').addEventListener('click', function(e) { if (e.target === this) fecharExclusao(); });
+
+  $('corpoTabela').addEventListener('click', handleAcao);
+  $('mobileCardsContainer').addEventListener('click', handleAcao);
+}
+
+// ========================================
+// CARREGAR DADOS
+// ========================================
+async function carregarDados(forcar) {
+  var ano = filtrosAtivos.ano || new Date().getFullYear().toString();
+  var mesesSel = filtrosAtivos.meses || [];
+  
+  var mesesParaCarregar = mesesSel.length > 0 ? mesesSel.slice() : 
+    ['0','1','2','3','4','5','6','7','8','9','10','11'];
+  
+  mostrarLoader(true);
+  
+  try {
+    // Calcula datas de filtro
+    var anoNum = parseInt(ano);
+    var dataIni, dataFim;
+    
+    if (mesesSel.length === 0) {
+      dataIni = ano + '-01-01';
+      dataFim = ano + '-12-31';
+    } else {
+      var mesesNum = mesesSel.map(function(m) { return parseInt(m); });
+      var menorMes = Math.min.apply(null, mesesNum);
+      var maiorMes = Math.max.apply(null, mesesNum);
+      
+      var primeiroDia = new Date(anoNum, menorMes, 1);
+      var ultimoDia = new Date(anoNum, maiorMes + 1, 0);
+      
+      dataIni = primeiroDia.toISOString().split('T')[0];
+      dataFim = ultimoDia.toISOString().split('T')[0];
+    }
+    
+    // Chama a API
+    var resultado = await apiRequest('listarRegistros', {
+      filtroDataInicio: dataIni,
+      filtroDataFim: dataFim
+    });
+    
+    if (resultado.success) {
+      registrosBrutos = resultado.registros || [];
+      cartoes = resultado.cartoes || [];
+      
+      preencherSelectCartoes();
+      agruparRegistros();
+      aplicarFiltrosLocais();
+      
+      // Carrega receita
+      carregarReceita(dataIni, dataFim);
+    } else {
+      mostrarToast(resultado.error || 'Erro ao carregar dados', 'error');
+      mostrarLoader(false);
+    }
+    
+  } catch (error) {
+    console.error('Erro ao carregar:', error);
+    mostrarToast('Erro de conexão', 'error');
+    
+    $('corpoTabela').innerHTML = '<tr><td colspan="11" class="empty-state"><span class="material-icons">cloud_off</span><p>Erro ao conectar com a API</p></td></tr>';
+    $('mobileCardsContainer').innerHTML = '<div class="empty-state"><span class="material-icons">cloud_off</span><p>Erro ao conectar com a API</p></div>';
+    
+    mostrarLoader(false);
+  }
+}
+
+async function carregarReceita(dataIni, dataFim) {
+  try {
+    var resultado = await apiRequest('obterReceitaLoja', {
+      filtroDataInicio: dataIni,
+      filtroDataFim: dataFim
+    });
+    
+    receita = (resultado && resultado.success) ? resultado.valor : 0;
+  } catch (error) {
+    receita = 0;
+  }
+  
+  calcularCards();
+  mostrarLoader(false);
+}
+
+function agruparRegistros() {
+  var mapa = {};
+  
+  for (var i = 0; i < registrosBrutos.length; i++) {
+    var r = registrosBrutos[i];
+    var linha = r.linha;
+    
+    if (!mapa[linha]) {
+      mapa[linha] = {
+        registro: r,
+        aparicoes: 1,
+        valorTotalPeriodo: Number(r.parcelaMes) || 0
+      };
+    } else {
+      mapa[linha].aparicoes++;
+      mapa[linha].valorTotalPeriodo += Number(r.parcelaMes) || 0;
+    }
+  }
+  
+  registrosAgrupados = [];
+  for (var linha in mapa) {
+    var item = mapa[linha];
+    var reg = Object.assign({}, item.registro);
+    reg.aparicoes = item.aparicoes;
+    reg.valorTotalPeriodo = item.valorTotalPeriodo;
+    registrosAgrupados.push(reg);
+  }
+  
+  registrosAgrupados.sort(function(a, b) {
+    var da = a.data || '';
+    var db = b.data || '';
+    if (da.indexOf('/') > -1 && db.indexOf('/') > -1) {
+      var pa = da.split('/');
+      var pb = db.split('/');
+      var dateA = new Date(pa[2], pa[1]-1, pa[0]);
+      var dateB = new Date(pb[2], pb[1]-1, pb[0]);
+      return dateB - dateA;
+    }
+    return 0;
+  });
+}
+
+function aplicarFiltrosLocais() {
+  var termo = normalizarTexto($('searchInput').value);
+  filtrados = [];
+  
+  for (var i = 0; i < registrosAgrupados.length; i++) {
+    var r = registrosAgrupados[i];
+    
+    if (filtrosAtivos.tipo) {
+      var tipoReg = normalizarTexto(r.tipo);
+      if (filtrosAtivos.tipo === 'gastos' && tipoReg.indexOf('gastos') === -1) continue;
+      if (filtrosAtivos.tipo === 'investimento' && tipoReg.indexOf('investimento') === -1) continue;
+    }
+    
+    if (filtrosAtivos.categoria) {
+      var cat = r.categoriaGastos || r.categoriaInvestimento || '';
+      if (normalizarTexto(cat) !== normalizarTexto(filtrosAtivos.categoria)) continue;
+    }
+    
+    if (filtrosAtivos.cartao) {
+      if (!r.nomeCartao || !compararCartoes(r.nomeCartao, filtrosAtivos.cartao)) continue;
+    }
+    
+    if (termo) {
+      var txt = normalizarTexto([r.descricao, r.categoriaGastos, r.categoriaInvestimento, r.metodoPagamento, r.nomeCartao].join(' '));
+      if (txt.indexOf(termo) === -1) continue;
+    }
+    
+    filtrados.push(r);
+  }
+  
+  renderizar();
+  atualizarContadores();
+  calcularCards();
+}
+
+function aplicarFiltros() {
+  var mesesChips = document.querySelectorAll('.month-chip.active');
+  var novosMeses = [];
+  mesesChips.forEach(function(chip) {
+    novosMeses.push(chip.getAttribute('data-mes'));
+  });
+  
+  var anoAnterior = filtrosAtivos.ano;
+  var mesesAnteriores = (filtrosAtivos.meses || []).slice();
+  
+  filtrosAtivos.ano = $('filtroAno').value || new Date().getFullYear().toString();
+  filtrosAtivos.meses = novosMeses;
+  filtrosAtivos.tipo = $('filtroTipo').value || null;
+  filtrosAtivos.categoria = $('filtroCategoria').value || null;
+  filtrosAtivos.cartao = $('filtroCartaoSelect').value || null;
+  filtrosAtivos.dataInicio = $('dataInicio').value || null;
+  filtrosAtivos.dataFim = $('dataFim').value || null;
+  
+  $('modalFiltro').classList.remove('active');
+  atualizarBotaoFiltro();
+  atualizarChipsFiltros();
+  
+  var mudouAno = filtrosAtivos.ano !== anoAnterior;
+  var mudouMeses = !arraysIguais(novosMeses, mesesAnteriores);
+  
+  if (mudouAno || mudouMeses) {
+    carregarDados();
+  } else {
+    aplicarFiltrosLocais();
+  }
+}
+
+function arraysIguais(a, b) {
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  var sortA = a.slice().sort();
+  var sortB = b.slice().sort();
+  for (var i = 0; i < sortA.length; i++) {
+    if (sortA[i] !== sortB[i]) return false;
+  }
+  return true;
+}
+
+function limparTodosFiltros() {
+  var anoAtual = new Date().getFullYear().toString();
+  
+  $('filtroAno').value = anoAtual;
+  $('filtroTipo').value = '';
+  $('filtroCategoria').value = '';
+  $('filtroCartaoSelect').value = '';
+  $('dataInicio').value = '';
+  $('dataFim').value = '';
+  $('searchInput').value = '';
+  
+  document.querySelectorAll('.month-chip').forEach(function(c) { 
+    c.classList.remove('active'); 
+  });
+  
+  filtroCartaoVisual = null;
+  $('cartaoVisualSection').classList.remove('show');
+  $('faturaTitle').textContent = 'Fatura';
+  
+  filtrosAtivos = {
+    ano: anoAtual,
+    meses: [],
+    tipo: null,
+    categoria: null,
+    cartao: null,
+    dataInicio: null,
+    dataFim: null
+  };
+  
+  atualizarBotaoFiltro();
+  atualizarChipsFiltros();
+  $('modalFiltro').classList.remove('active');
+  carregarDados();
+}
+
+function atualizarBotaoFiltro() {
+  var btn = $('btnFiltrar');
+  var temFiltro = filtrosAtivos.meses.length > 0 || filtrosAtivos.tipo || 
+                  filtrosAtivos.categoria || filtrosAtivos.cartao || 
+                  filtrosAtivos.dataInicio || filtrosAtivos.dataFim;
+  
+  btn.classList.toggle('filter-active', temFiltro);
+  
+  var count = 0;
+  if (filtrosAtivos.meses.length > 0) count++;
+  if (filtrosAtivos.tipo) count++;
+  if (filtrosAtivos.categoria) count++;
+  if (filtrosAtivos.cartao) count++;
+  if (filtrosAtivos.dataInicio && filtrosAtivos.dataFim) count++;
+  
+  if (count > 0) {
+    btn.innerHTML = '<span class="material-icons">tune</span>Filtrar<span class="filter-badge">' + count + '</span>';
+  } else {
+    btn.innerHTML = '<span class="material-icons">tune</span>Filtrar';
+  }
+}
+
+function atualizarChipsFiltros() {
+  var container = $('activeFilters');
+  var html = '';
+  
+  if (filtrosAtivos.ano) {
+    html += '<div class="filter-chip">📅 ' + filtrosAtivos.ano + '</div>';
+  }
+  
+  if (filtrosAtivos.meses.length > 0) {
+    var nomesMeses = filtrosAtivos.meses.map(function(m) {
+      return mesesNomes[parseInt(m)];
+    }).join(', ');
+    html += '<div class="filter-chip">🗓️ ' + nomesMeses + '<span class="remove-chip" data-filtro="meses">×</span></div>';
+  }
+  
+  if (filtrosAtivos.tipo) {
+    var tipoLabel = filtrosAtivos.tipo === 'gastos' ? 'Gastos' : 'Investimento';
+    html += '<div class="filter-chip">📊 ' + tipoLabel + '<span class="remove-chip" data-filtro="tipo">×</span></div>';
+  }
+  
+  if (filtrosAtivos.categoria) {
+    html += '<div class="filter-chip">🏷️ ' + filtrosAtivos.categoria + '<span class="remove-chip" data-filtro="categoria">×</span></div>';
+  }
+  
+  if (filtrosAtivos.cartao) {
+    html += '<div class="filter-chip">💳 ' + filtrosAtivos.cartao + '<span class="remove-chip" data-filtro="cartao">×</span></div>';
+  }
+  
+  container.innerHTML = html;
+  container.classList.toggle('show', html !== '');
+  
+  container.querySelectorAll('.remove-chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      removerFiltro(this.getAttribute('data-filtro'));
+    });
+  });
+}
+
+function removerFiltro(tipo) {
+  switch (tipo) {
+    case 'meses':
+      filtrosAtivos.meses = [];
+      document.querySelectorAll('.month-chip').forEach(function(c) { c.classList.remove('active'); });
+      break;
+    case 'tipo':
+      filtrosAtivos.tipo = null;
+      $('filtroTipo').value = '';
+      break;
+    case 'categoria':
+      filtrosAtivos.categoria = null;
+      $('filtroCategoria').value = '';
+      break;
+    case 'cartao':
+      filtrosAtivos.cartao = null;
+      $('filtroCartaoSelect').value = '';
+      break;
+  }
+  atualizarBotaoFiltro();
+  atualizarChipsFiltros();
+  carregarDados();
+}
+
+async function carregarCategoriasParaFiltro() {
+  var tipo = $('filtroTipo').value;
+  var sel = $('filtroCategoria');
+  
+  if (!tipo) {
+    sel.innerHTML = '<option value="">Todas as categorias</option>';
+    return;
+  }
+  
+  var tipoCategoria = tipo === 'gastos' ? 'gastos' : 'investimento';
+  
+  if (categorias[tipoCategoria] && categorias[tipoCategoria].length > 0) {
+    preencherSelectCategorias(categorias[tipoCategoria]);
+    return;
+  }
+  
+  sel.innerHTML = '<option value="">Carregando...</option>';
+  
+  try {
+    var resultado = await apiRequest('obterCategorias', { tipo: tipoCategoria });
+    if (resultado.success && resultado.data) {
+      categorias[tipoCategoria] = resultado.data;
+      preencherSelectCategorias(resultado.data);
+    }
+  } catch (error) {
+    sel.innerHTML = '<option value="">Erro ao carregar</option>';
+  }
+}
+
+function preencherSelectCategorias(cats) {
+  var sel = $('filtroCategoria');
+  var html = '<option value="">Todas as categorias</option>';
+  for (var i = 0; i < cats.length; i++) {
+    html += '<option value="' + cats[i] + '">' + cats[i] + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
+function preencherSelectCartoes() {
+  var selFiltro = $('filtroCartaoSelect');
+  selFiltro.innerHTML = '<option value="">Todos os cartões</option>';
+  var selEdit = $('editCartao');
+  selEdit.innerHTML = '<option value="">Selecione</option>';
+  
+  for (var i = 0; i < cartoes.length; i++) {
+    selFiltro.innerHTML += '<option value="' + cartoes[i] + '">' + cartoes[i] + '</option>';
+    selEdit.innerHTML += '<option value="' + cartoes[i] + '">' + cartoes[i] + '</option>';
+  }
+}
+
+// ========================================
+// CALCULAR CARDS
+// ========================================
+function calcularCards() {
+  var despT = 0, despG = 0, despI = 0, fat = 0;
+  var cartaoG = 0, cartaoI = 0, cartaoFat = 0;
+
+  for (var i = 0; i < filtrados.length; i++) {
+    var r = filtrados[i];
+    var m = r.metodoPagamento || '';
+    var t = r.tipo || '';
+    var isCartao = m === 'CARTÃO';
+    var vNormal = Number(r.valorNormal) || 0;
+    
+    var valorDesp;
+    if (isCartao) {
+      valorDesp = r.valorTotalPeriodo || Number(r.parcelaMes) || 0;
+    } else {
+      valorDesp = vNormal;
+    }
+    
+    despT += valorDesp;
+    
+    if (t.indexOf('Gastos') > -1) despG += valorDesp;
+    if (t.indexOf('Investimento') > -1) despI += valorDesp;
+    
+    if (isCartao) fat += valorDesp;
+
+    if (filtroCartaoVisual && isCartao && compararCartoes(r.nomeCartao, filtroCartaoVisual)) {
+      cartaoFat += valorDesp;
+      if (t.indexOf('Gastos') > -1) cartaoG += valorDesp;
+      if (t.indexOf('Investimento') > -1) cartaoI += valorDesp;
+    }
+  }
+
+  var bal = receita - despT;
+
+  $('cardDespesasTotal').textContent = formatarMoeda(despT);
+  $('cardCategoriaGastos').textContent = formatarMoeda(despG);
+  $('cardCategoriaInvestimento').textContent = formatarMoeda(despI);
+  $('cardFaturaCartao').textContent = formatarMoeda(filtroCartaoVisual ? cartaoFat : fat);
+  $('cardReceitaLoja').textContent = formatarMoeda(receita);
+  $('cardBalanco').textContent = formatarMoeda(bal);
+
+  if (filtroCartaoVisual) {
+    $('cartaoFatura').textContent = formatarMoeda(cartaoFat);
+    $('cartaoGastos').textContent = formatarMoeda(cartaoG);
+    $('cartaoInvestimento').textContent = formatarMoeda(cartaoI);
+  }
+
+  $('cardBalancoContainer').classList.toggle('negativo', bal < 0);
+}
+
+function atualizarContadores() {
+  $('totalRegistros').textContent = registrosAgrupados.length;
+  $('registrosVisiveis').textContent = filtrados.length;
+}
+
+// ========================================
+// RENDERIZAR
+// ========================================
+function renderizar() {
+  if (modo === 'mobile') renderMobile();
+  else renderDesktop();
+}
+
+function renderDesktop() {
+  var tb = $('corpoTabela');
+  if (!filtrados.length) {
+    tb.innerHTML = '<tr><td colspan="11" class="empty-state"><span class="material-icons">inbox</span><p>Nenhum registro encontrado</p></td></tr>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < filtrados.length; i++) {
+    var r = filtrados[i];
+    var cat = r.categoriaGastos || r.categoriaInvestimento || '-';
+    var isG = (r.tipo || '').indexOf('Gastos') > -1;
+    var v = r.valorCartao || r.valorNormal || 0;
+    var pm = Number(r.parcelaMes) || 0;
+    var rest = r.parcelasRestantes || 0;
+    var aparicoes = r.aparicoes || 1;
+    var cartaoClasse = obterClasseCartao(r.nomeCartao);
+
+    h += '<tr>';
+    h += '<td>' + formatarData(r.data) + '</td>';
+    h += '<td><span class="badge ' + (isG ? 'badge-gastos' : 'badge-investimento') + '">' + (isG ? 'Gastos' : 'Invest.') + '</span></td>';
+    h += '<td>' + (r.descricao || '-') + '</td>';
+    h += '<td>' + cat + '</td>';
+    h += '<td>' + (r.metodoPagamento || '-') + '</td>';
+    h += '<td>' + (r.nomeCartao ? '<span class="badge-cartao ' + cartaoClasse + '">' + r.nomeCartao + '</span>' : '-') + '</td>';
+    h += '<td>' + (r.parcelas || '-') + '</td>';
+    h += '<td><strong>' + formatarMoeda(v) + '</strong></td>';
+    
+    if (pm > 0) {
+      if (aparicoes > 1) {
+        h += '<td><span class="valor-parcela-mult"><span class="mult-count">' + aparicoes + '×</span><span class="mult-valor">' + formatarMoeda(pm) + '</span></span></td>';
+      } else {
+        h += '<td><span class="valor-parcela">' + formatarMoeda(pm) + '</span></td>';
+      }
+    } else {
+      h += '<td>-</td>';
+    }
+    
+    h += '<td>' + (rest > 0 ? rest : '-') + '</td>';
+    h += '<td><div class="action-buttons">';
+    h += '<button type="button" class="icon-btn edit" data-linha="' + r.linha + '" data-acao="editar"><span class="material-icons">edit</span></button>';
+    h += '<button type="button" class="icon-btn delete" data-linha="' + r.linha + '" data-acao="excluir"><span class="material-icons">delete</span></button>';
+    h += '</div></td></tr>';
+  }
+  tb.innerHTML = h;
+}
+
+function renderMobile() {
+  var c = $('mobileCardsContainer');
+  if (!filtrados.length) {
+    c.innerHTML = '<div class="empty-state"><span class="material-icons">inbox</span><p>Nenhum registro encontrado</p></div>';
+    return;
+  }
+  var h = '';
+  for (var i = 0; i < filtrados.length; i++) {
+    var r = filtrados[i];
+    var cat = r.categoriaGastos || r.categoriaInvestimento || '-';
+    var catEmoji = obterEmojiCategoria(cat);
+    var isG = (r.tipo || '').indexOf('Gastos') > -1;
+    var v = r.valorCartao || r.valorNormal || 0;
+    var pm = Number(r.parcelaMes) || 0;
+    var rest = r.parcelasRestantes || 0;
+    var aparicoes = r.aparicoes || 1;
+    var met = r.metodoPagamento || '-';
+    var ico = met === 'CARTÃO' ? 'credit_card' : met === 'PIX' ? 'pix' : 'payments';
+    var cartaoClasse = obterClasseCartao(r.nomeCartao);
+
+    h += '<div class="mobile-registro-card ' + (isG ? 'tipo-gastos' : 'tipo-investimento') + '">';
+    h += '<div class="mobile-card-header">';
+    h += '<div class="mobile-card-info">';
+    h += '<div class="mobile-card-top">';
+    h += '<span class="badge ' + (isG ? 'badge-gastos' : 'badge-investimento') + '">' + (isG ? 'Gastos' : 'Invest.') + '</span>';
+    if (r.nomeCartao) h += '<span class="badge-cartao ' + cartaoClasse + '">' + r.nomeCartao + '</span>';
+    h += '<span class="mobile-card-data">' + formatarData(r.data) + '</span>';
+    h += '</div>';
+    h += '<div class="mobile-card-descricao">' + (r.descricao || 'Sem descrição') + '</div>';
+    h += '</div>';
+    h += '<div class="mobile-card-actions">';
+    h += '<button type="button" class="icon-btn edit" data-linha="' + r.linha + '" data-acao="editar"><span class="material-icons">edit</span></button>';
+    h += '<button type="button" class="icon-btn delete" data-linha="' + r.linha + '" data-acao="excluir"><span class="material-icons">delete</span></button>';
+    h += '</div></div>';
+    h += '<div class="mobile-card-body">';
+    h += '<div class="mobile-card-left">';
+    h += '<div class="mobile-card-categoria"><span class="cat-emoji">' + catEmoji + '</span> ' + cat + '</div>';
+    h += '<div class="mobile-card-metodo"><span class="material-icons">' + ico + '</span>' + met;
+    if (r.parcelas) h += ' (' + r.parcelas + 'x)';
+    h += '</div></div>';
+    h += '<div class="mobile-card-right">';
+    h += '<div class="mobile-card-valor">' + formatarMoeda(v) + '</div>';
+    
+    if (pm > 0) {
+      if (aparicoes > 1) {
+        h += '<div class="mobile-card-parcela-mult"><span class="mult-badge">' + aparicoes + '×</span> ' + formatarMoeda(pm) + '</div>';
+      } else {
+        h += '<div class="mobile-card-parcela">Mês: ' + formatarMoeda(pm) + '</div>';
+      }
+    }
+    
+    if (rest > 0) h += '<div class="mobile-card-restantes">' + rest + ' restantes</div>';
+    h += '</div></div></div>';
+  }
+  c.innerHTML = h;
+}
+
+// ========================================
+// SELETOR CARTÃO VISUAL
+// ========================================
+function abrirSeletorCartao() {
+  var lista = $('listaCartoes');
+  var html = '<div class="cartao-option' + (filtroCartaoVisual === null ? ' selected' : '') + '" data-cartao="">';
+  html += '<div class="cartao-cor" style="background: linear-gradient(135deg, #5f6368, #3c4043)"></div>';
+  html += '<span class="cartao-nome">Todos os Cartões</span>';
+  html += '<span class="material-icons check-icon">check</span></div>';
+
+  for (var i = 0; i < cartoes.length; i++) {
+    var nome = cartoes[i];
+    var classe = obterClasseCartao(nome);
+    var selected = filtroCartaoVisual && compararCartoes(filtroCartaoVisual, nome) ? ' selected' : '';
+    html += '<div class="cartao-option' + selected + '" data-cartao="' + nome + '">';
+    html += '<div class="cartao-cor ' + classe + '"></div>';
+    html += '<span class="cartao-nome">' + nome + '</span>';
+    html += '<span class="material-icons check-icon">check</span></div>';
+  }
+
+  lista.innerHTML = html;
+  lista.querySelectorAll('.cartao-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      var cartao = this.getAttribute('data-cartao');
+      selecionarCartaoVisual(cartao || null);
+      $('popupSeletorCartao').classList.remove('active');
+    });
+  });
+  $('popupSeletorCartao').classList.add('active');
+}
+
+function selecionarCartaoVisual(cartao) {
+  filtroCartaoVisual = cartao;
+  atualizarVisualCartao();
+  calcularCards();
+}
+
+function atualizarVisualCartao() {
+  var section = $('cartaoVisualSection');
+  var visual = $('cartaoVisual');
+  
+  if (filtroCartaoVisual) {
+    section.classList.add('show');
+    $('cartaoNome').textContent = filtroCartaoVisual.toUpperCase();
+    $('faturaTitle').textContent = filtroCartaoVisual;
+    visual.className = 'cartao-visual';
+    var classe = obterClasseCartao(filtroCartaoVisual);
+    if (classe) visual.classList.add(classe);
+  } else {
+    section.classList.remove('show');
+    $('faturaTitle').textContent = 'Fatura';
+  }
+}
+
+// ========================================
+// CONFIG CARTÃO
+// ========================================
+function preencherSelectConfigCartao() {
+  var sel = $('configSelectCartao');
+  sel.innerHTML = '<option value="">Escolher cartão...</option>';
+  for (var i = 0; i < cartoes.length; i++) {
+    sel.innerHTML += '<option value="' + cartoes[i] + '">' + cartoes[i] + '</option>';
+  }
+  $('configCartaoSection').classList.remove('show');
+}
+
+async function carregarConfigCartaoSelecionado() {
+  var nome = $('configSelectCartao').value;
+  if (!nome) {
+    $('configCartaoSection').classList.remove('show');
+    return;
+  }
+  $('configCartaoSection').classList.add('show');
+  $('configFechamento').value = '';
+  $('configVencimento').value = '';
+  
+  try {
+    var resultado = await apiRequest('obterConfigCartao', { nomeCartao: nome });
+    if (resultado && resultado.success) {
+      $('configFechamento').value = resultado.fechamento || '';
+      $('configVencimento').value = resultado.vencimento || '';
+    }
+  } catch (error) {
+    console.error('Erro ao carregar config:', error);
+  }
+}
+
+async function salvarConfigCartao() {
+  var nome = $('configSelectCartao').value;
+  var fech = $('configFechamento').value;
+  var venc = $('configVencimento').value;
+  if (!nome) { mostrarToast('Selecione um cartão', 'error'); return; }
+  if (!fech || !venc) { mostrarToast('Preencha os campos', 'error'); return; }
+  var btn = $('btnSalvarConfigCartao');
+  btn.disabled = true;
+  
+  try {
+    var resultado = await apiRequest('salvarConfigCartao', {
+      nomeCartao: nome,
+      fechamento: parseInt(fech),
+      vencimento: parseInt(venc)
+    });
+    
+    if (resultado && resultado.success) {
+      mostrarToast('Configuração salva!', 'success');
+    } else {
+      mostrarToast(resultado.message || 'Erro', 'error');
+    }
+  } catch (error) {
+    mostrarToast('Erro: ' + error.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ========================================
+// EDIÇÃO
+// ========================================
+function handleAcao(e) {
+  var btn = e.target.closest('[data-acao]');
+  if (!btn) return;
+  var linha = parseInt(btn.getAttribute('data-linha'));
+  var acao = btn.getAttribute('data-acao');
+  if (acao === 'editar') abrirEdicao(linha);
+  else if (acao === 'excluir') abrirExclusao(linha);
+}
+
+function abrirEdicao(linha) {
+  var r = registrosAgrupados.find(function(x) { return x.linha === linha; });
+  if (!r) { mostrarToast('Não encontrado', 'error'); return; }
+  editando = r;
+
+  var d = r.data;
+  if (typeof d === 'string' && d.indexOf('/') > -1) {
+    var p = d.split('/');
+    d = p[2] + '-' + p[1].padStart(2, '0') + '-' + p[0].padStart(2, '0');
+  }
+  $('editData').value = d || '';
+  $('editTipo').value = r.tipo || 'Categoria Gastos';
+  $('editDescricao').value = r.descricao || '';
+  $('editMetodo').value = r.metodoPagamento || 'DINHEIRO';
+  $('editParcelas').value = r.parcelas || '';
+  $('editCartao').value = r.nomeCartao || '';
+  
+  var isCartao = r.metodoPagamento === 'CARTÃO';
+  $('parcelasGroup').style.display = isCartao ? 'block' : 'none';
+  $('cartaoGroup').style.display = isCartao ? 'block' : 'none';
+  
+  var v = isCartao ? r.valorCartao : r.valorNormal;
+  if (!v) v = r.valorCartao || r.valorNormal || 0;
+  $('editValor').value = formatarMoeda(v);
+  
+  carregarCategorias();
+  $('modalEdicao').classList.add('active');
+}
+
+function fecharEdicao() {
+  $('modalEdicao').classList.remove('active');
+  editando = null;
+}
+
+async function carregarCategorias() {
+  var tipo = $('editTipo').value;
+  var tc = tipo.indexOf('Gastos') > -1 ? 'gastos' : 'investimento';
+  var atual = editando ? (editando.categoriaGastos || editando.categoriaInvestimento) : '';
+  var sel = $('editCategoria');
+  
+  if (categorias[tc] && categorias[tc].length > 0) {
+    preencherCat(categorias[tc], atual);
+    return;
+  }
+  
+  sel.innerHTML = '<option value="">Carregando...</option>';
+  
+  try {
+    var resultado = await apiRequest('obterCategorias', { tipo: tc });
+    if (resultado.success && resultado.data) {
+      categorias[tc] = resultado.data;
+      preencherCat(resultado.data, atual);
+    }
+  } catch (error) {
+    sel.innerHTML = '<option value="">Erro</option>';
+  }
+}
+
+function preencherCat(cats, atual) {
+  var h = '<option value="">Selecione</option>';
+  for (var i = 0; i < cats.length; i++) {
+    h += '<option value="' + cats[i] + '"' + (cats[i] === atual ? ' selected' : '') + '>' + cats[i] + '</option>';
+  }
+  $('editCategoria').innerHTML = h;
+}
+
+async function salvarEdicao() {
+  if (!editando) return;
+  var data = $('editData').value;
+  var tipo = $('editTipo').value;
+  var cat = $('editCategoria').value;
+  var desc = $('editDescricao').value;
+  var met = $('editMetodo').value;
+  var parc = $('editParcelas').value;
+  var cartao = $('editCartao').value;
+  var vs = $('editValor').value;
+  var v = parseFloat(vs.replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
+
+  if (!data || !met || v <= 0) { mostrarToast('Preencha os campos', 'error'); return; }
+  if (met === 'CARTÃO' && !parc) { mostrarToast('Informe parcelas', 'error'); return; }
+
+  var p = data.split('-');
+  var obj = {
+    linha: editando.linha,
+    data: p[2] + '/' + p[1] + '/' + p[0],
+    tipo: tipo,
+    descricao: desc,
+    categoriaGastos: tipo.indexOf('Gastos') > -1 ? cat : '',
+    categoriaInvestimento: tipo.indexOf('Investimento') > -1 ? cat : '',
+    metodoPagamento: met,
+    nomeCartao: met === 'CARTÃO' ? cartao : '',
+    parcelas: met === 'CARTÃO' ? parc : '',
+    valorCartao: met === 'CARTÃO' ? v : 0,
+    valorNormal: met !== 'CARTÃO' ? v : 0
+  };
+
+  mostrarLoader(true);
+  
+  try {
+    var resultado = await apiRequest('editarRegistro', { registro: obj });
+    
+    if (resultado && resultado.success) {
+      mostrarToast('Salvo!', 'success');
+      fecharEdicao();
+      carregarDados(true);
+    } else {
+      mostrarToast(resultado ? resultado.message : 'Erro', 'error');
+    }
+  } catch (error) {
+    mostrarToast('Erro: ' + error.message, 'error');
+  } finally {
+    mostrarLoader(false);
+  }
+}
+
+function abrirExclusao(linha) {
+  linhaExcluir = linha;
+  $('modalConfirmacao').classList.add('active');
+}
+
+function fecharExclusao() {
+  $('modalConfirmacao').classList.remove('active');
+  linhaExcluir = null;
+}
+
+async function executarExclusao() {
+  if (!linhaExcluir) return;
+  var linha = linhaExcluir;
+  fecharExclusao();
+  mostrarLoader(true);
+  
+  try {
+    var resultado = await apiRequest('excluirRegistro', { linha: linha });
+    
+    if (resultado && resultado.success) {
+      mostrarToast('Excluído!', 'success');
+      carregarDados(true);
+    } else {
+      mostrarToast(resultado ? resultado.message : 'Erro', 'error');
+    }
+  } catch (error) {
+    mostrarToast('Erro: ' + error.message, 'error');
+  } finally {
+    mostrarLoader(false);
+  }
+}
+
+// ========================================
+// INIT
+// ========================================
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
 </body>
 </html>
