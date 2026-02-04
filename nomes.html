@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a73e8">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- Ícone -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a73e8' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>📝</text></svg>">
+  
+  <!-- Fontes -->
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./styles.css">
+  
+  <title>Cadastro de Nomes</title>
+  
+  <style>
+    .tab-section {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 14px;
+    }
+    
+    .tab-header {
+      display: flex;
+      border-bottom: 1px solid #e8eaed;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 14px 10px;
+      border: none;
+      background: #f8f9fa;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #5f6368;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn .material-icons {
+      font-size: 20px;
+    }
+    
+    .tab-btn.active {
+      background: white;
+      color: #1a73e8;
+      border-bottom: 3px solid #1a73e8;
+    }
+    
+    .tab-btn[data-tab="gastos"].active {
+      color: #ea4335;
+      border-bottom-color: #ea4335;
+    }
+    
+    .tab-btn[data-tab="investimento"].active {
+      color: #34a853;
+      border-bottom-color: #34a853;
+    }
+    
+    .tab-btn[data-tab="cartoes"].active {
+      color: #f57c00;
+      border-bottom-color: #f57c00;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 14px;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    
+    .add-form input {
+      flex: 1;
+      height: 44px;
+      padding: 0 14px;
+      border: 2px solid #e8eaed;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    .add-form input:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+    
+    .add-form .btn {
+      height: 44px;
+      padding: 0 16px;
+    }
+    
+    .items-list {
+      max-height: 350px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .item-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .item-card:last-child {
+      margin-bottom: 0;
+    }
+    
+    .item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #202124;
+    }
+    
+    .item-delete {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: #fce8e6;
+      color: #ea4335;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .item-delete .material-icons {
+      font-size: 18px;
+    }
+    
+    .items-count {
+      font-size: 12px;
+      color: #5f6368;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .items-count .material-icons {
+      font-size: 16px;
+    }
+    
+    .empty-items {
+      text-align: center;
+      padding: 30px 20px;
+      color: #9aa0a6;
+    }
+    
+    .empty-items .material-icons {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    
+    /* Cores específicas */
+    .tab-content[data-tab="gastos"] .add-form input:focus { border-color: #ea4335; }
+    .tab-content[data-tab="gastos"] .add-form .btn { background: #ea4335; }
+    .tab-content[data-tab="gastos"] .item-card { border-left: 4px solid #ea4335; }
+    
+    .tab-content[data-tab="investimento"] .add-form input:focus { border-color: #34a853; }
+    .tab-content[data-tab="investimento"] .add-form .btn { background: #34a853; }
+    .tab-content[data-tab="investimento"] .item-card { border-left: 4px solid #34a853; }
+    
+    .tab-content[data-tab="cartoes"] .add-form input:focus { border-color: #f57c00; }
+    .tab-content[data-tab="cartoes"] .add-form .btn { background: #f57c00; }
+    .tab-content[data-tab="cartoes"] .item-card { border-left: 4px solid #f57c00; }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Status -->
+  <div id="statusBar" class="status-bar online">
+    <span id="statusIcon">🟢</span>
+    <span id="statusText">Online</span>
+    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
+  </div>
+
+  <!-- Botão Voltar -->
+  <a class="back-button-fixed" href="./index.html">
+    <span class="material-icons">arrow_back</span>
+    Início
+  </a>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h2>📝 Cadastro de Nomes</h2>
+      <p style="font-size: 12px; color: #5f6368; margin-top: 4px;">Categorias de gastos, investimentos e cartões</p>
+    </div>
+
+    <!-- Seção de Tabs -->
+    <div class="tab-section">
+      
+      <!-- Cabeçalho das Tabs -->
+      <div class="tab-header">
+        <button class="tab-btn active" data-tab="gastos">
+          <span class="material-icons">shopping_cart</span>
+          Gastos
+        </button>
+        <button class="tab-btn" data-tab="investimento">
+          <span class="material-icons">trending_up</span>
+          Investimento
+        </button>
+        <button class="tab-btn" data-tab="cartoes">
+          <span class="material-icons">credit_card</span>
+          Cartões
+        </button>
+      </div>
+
+      <!-- Conteúdo: Gastos -->
+      <div class="tab-content active" data-tab="gastos">
+        <form class="add-form" id="formGastos">
+          <input type="text" id="inputGastos" placeholder="Nova categoria de gastos..." maxlength="50">
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">add</span>
+          </button>
+        </form>
+        <div class="items-count">
+          <span class="material-icons">label</span>
+          <span id="countGastos">0 categorias</span>
+        </div>
+        <div class="items-list" id="listaGastos">
+          <div class="empty-items">
+            <span class="material-icons">hourglass_empty</span>
+            Carregando...
+          </div>
+        </div>
+      </div>
+
+      <!-- Conteúdo: Investimento -->
+      <div class="tab-content" data-tab="investimento">
+        <form class="add-form" id="formInvestimento">
+          <input type="text" id="inputInvestimento" placeholder="Novo tipo de investimento..." maxlength="50">
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">add</span>
+          </button>
+        </form>
+        <div class="items-count">
+          <span class="material-icons">label</span>
+          <span id="countInvestimento">0 tipos</span>
+        </div>
+        <div class="items-list" id="listaInvestimento">
+          <div class="empty-items">
+            <span class="material-icons">hourglass_empty</span>
+            Carregando...
+          </div>
+        </div>
+      </div>
+
+      <!-- Conteúdo: Cartões -->
+      <div class="tab-content" data-tab="cartoes">
+        <form class="add-form" id="formCartoes">
+          <input type="text" id="inputCartoes" placeholder="Nome do cartão..." maxlength="50">
+          <button type="submit" class="btn btn-primary">
+            <span class="material-icons">add</span>
+          </button>
+        </form>
+        <div class="items-count">
+          <span class="material-icons">credit_card</span>
+          <span id="countCartoes">0 cartões</span>
+        </div>
+        <div class="items-list" id="listaCartoes">
+          <div class="empty-items">
+            <span class="material-icons">hourglass_empty</span>
+            Carregando...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Dica -->
+    <div class="form-card" style="background: #e8f5e9; border: 1px solid #a5d6a7;">
+      <p style="font-size: 12px; color: #2e7d32; display: flex; align-items: flex-start; gap: 8px;">
+        <span class="material-icons" style="font-size: 18px;">lightbulb</span>
+        <span>Os nomes cadastrados aqui aparecerão nas listas de seleção ao cadastrar novos registros financeiros.</span>
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Carregando...</div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="./app.js"></script>
+  
+  <script>
+  (function() {
+    'use strict';
+    
+    // ========== ESTADO ==========
+    let dados = {
+      gastos: [],
+      investimento: [],
+      cartoes: []
+    };
+    
+    let tabAtual = 'gastos';
+    
+    // ========== ELEMENTOS ==========
+    const els = {
+      formGastos: document.getElementById('formGastos'),
+      formInvestimento: document.getElementById('formInvestimento'),
+      formCartoes: document.getElementById('formCartoes'),
+      inputGastos: document.getElementById('inputGastos'),
+      inputInvestimento: document.getElementById('inputInvestimento'),
+      inputCartoes: document.getElementById('inputCartoes'),
+      listaGastos: document.getElementById('listaGastos'),
+      listaInvestimento: document.getElementById('listaInvestimento'),
+      listaCartoes: document.getElementById('listaCartoes'),
+      countGastos: document.getElementById('countGastos'),
+      countInvestimento: document.getElementById('countInvestimento'),
+      countCartoes: document.getElementById('countCartoes')
+    };
+    
+    // ========== INICIALIZAÇÃO ==========
+    async function init() {
+      console.log('[Nomes] Inicializando...');
+      
+      setupEventos();
+      await carregarTodos();
+      
+      console.log('[Nomes] Pronto!');
+    }
+    
+    // ========== CARREGAR DADOS ==========
+    async function carregarTodos() {
+      await Promise.all([
+        carregarDados('gastos'),
+        carregarDados('investimento'),
+        carregarDados('cartoes')
+      ]);
+    }
+    
+    async function carregarDados(tipo) {
+      const App = window.FinanceiroApp;
+      
+      const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
+      
+      // Tenta cache primeiro
+      const cached = await App.getCachedData(cacheKey);
+      if (cached) {
+        dados[tipo] = cached;
+        renderizarLista(tipo);
+      }
+      
+      // Se online, busca da API
+      if (navigator.onLine) {
+        try {
+          let result;
+          
+          if (tipo === 'cartoes') {
+            result = await App.apiRequest('obterCartoes');
+          } else {
+            result = await App.apiRequest('obterCategorias', { tipo: tipo });
+          }
+          
+          if (result.success && result.data) {
+            dados[tipo] = result.data.filter(item => item && item.trim());
+            await App.cacheData(cacheKey, dados[tipo]);
+            renderizarLista(tipo);
+          }
+        } catch (error) {
+          console.error(`[Nomes] Erro ao carregar ${tipo}:`, error);
+        }
+      }
+      
+      // Se não tem dados
+      if (dados[tipo].length === 0) {
+        const lista = els[`lista${capitalize(tipo)}`];
+        if (lista && !cached) {
+          lista.innerHTML = `
+            <div class="empty-items">
+              <span class="material-icons">inbox</span>
+              Nenhum item cadastrado
+            </div>
+          `;
+        }
+      }
+    }
+    
+    // ========== RENDERIZAÇÃO ==========
+    function renderizarLista(tipo) {
+      const lista = els[`lista${capitalize(tipo)}`];
+      const count = els[`count${capitalize(tipo)}`];
+      const items = dados[tipo];
+      
+      if (!lista) return;
+      
+      const n = items.length;
+      
+      // Atualiza contador
+      if (tipo === 'cartoes') {
+        count.textContent = `${n} cartão${n !== 1 ? 'es' : ''}`;
+      } else if (tipo === 'investimento') {
+        count.textContent = `${n} tipo${n !== 1 ? 's' : ''}`;
+      } else {
+        count.textContent = `${n} categoria${n !== 1 ? 's' : ''}`;
+      }
+      
+      if (n === 0) {
+        lista.innerHTML = `
+          <div class="empty-items">
+            <span class="material-icons">inbox</span>
+            Nenhum item cadastrado
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '';
+      
+      for (const item of items) {
+        html += `
+          <div class="item-card">
+            <span class="item-name">${item}</span>
+            <button class="item-delete" data-tipo="${tipo}" data-nome="${item}" title="Excluir">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        `;
+      }
+      
+      lista.innerHTML = html;
+    }
+    
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // ========== EVENTOS ==========
+    function setupEventos() {
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Atualiza botões
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // Atualiza conteúdo
+          tabAtual = btn.dataset.tab;
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          document.querySelector(`.tab-content[data-tab="${tabAtual}"]`).classList.add('active');
+        });
+      });
+      
+      // Formulários
+      els.formGastos.addEventListener('submit', (e) => {
+        e.preventDefault();
+        adicionarItem('gastos', els.inputGastos);
+      });
+      
+      els.formInvestimento.addEventListener('submit', (e) => {
+        e.preventDefault();
+        adicionarItem('investimento', els.inputInvestimento);
+      });
+      
+      els.formCartoes.addEventListener('submit', (e) => {
+        e.preventDefault();
+        adicionarItem('cartoes', els.inputCartoes);
+      });
+      
+      // Delegação para excluir
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.item-delete');
+        if (btn) {
+          const tipo = btn.dataset.tipo;
+          const nome = btn.dataset.nome;
+          excluirItem(tipo, nome);
+        }
+      });
+    }
+    
+    // ========== ADICIONAR ==========
+    async function adicionarItem(tipo, inputEl) {
+      const App = window.FinanceiroApp;
+      const nome = inputEl.value.trim();
+      
+      if (!nome) {
+        App.showToast('Digite um nome', 'error');
+        return;
+      }
+      
+      // Verifica duplicado
+      if (dados[tipo].includes(nome)) {
+        App.showToast('Este nome já existe', 'error');
+        return;
+      }
+      
+      App.showLoader(true, 'Salvando...');
+      
+      try {
+        let acao;
+        let params;
+        
+        if (tipo === 'cartoes') {
+          acao = 'adicionarCartao';
+          params = { nomeCartao: nome };
+        } else {
+          acao = 'adicionarCategoria';
+          params = { tipo: tipo, nomeCategoria: nome };
+        }
+        
+        const result = await App.executeOperation(acao, params);
+        
+        if (result.success) {
+          // Adiciona localmente
+          dados[tipo].push(nome);
+          dados[tipo].sort();
+          
+          // Atualiza cache
+          const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
+          await App.cacheData(cacheKey, dados[tipo]);
+          
+          renderizarLista(tipo);
+          inputEl.value = '';
+          
+          if (result.offline) {
+            App.showToast('Salvo offline!', 'warning');
+          } else {
+            App.showToast('Adicionado com sucesso!', 'success');
+          }
+        } else {
+          App.showToast(result.error || 'Erro ao adicionar', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        App.showLoader(false);
+      }
+    }
+    
+    // ========== EXCLUIR ==========
+    async function excluirItem(tipo, nome) {
+      const App = window.FinanceiroApp;
+      
+      if (!confirm(`Excluir "${nome}"?`)) return;
+      
+      App.showLoader(true, 'Excluindo...');
+      
+      try {
+        let acao;
+        let params;
+        
+        if (tipo === 'cartoes') {
+          acao = 'removerCartao';
+          params = { nomeCartao: nome };
+        } else {
+          acao = 'removerCategoria';
+          params = { tipo: tipo, nomeCategoria: nome };
+        }
+        
+        const result = await App.executeOperation(acao, params);
+        
+        if (result.success) {
+          // Remove localmente
+          dados[tipo] = dados[tipo].filter(item => item !== nome);
+          
+          // Atualiza cache
+          const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
+          await App.cacheData(cacheKey, dados[tipo]);
+          
+          renderizarLista(tipo);
+          
+          if (result.offline) {
+            App.showToast('Exclusão salva offline!', 'warning');
+          } else {
+            App.showToast('Excluído com sucesso!', 'success');
+          }
+        } else {
+          App.showToast(result.error || 'Erro ao excluir', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        App.showLoader(false);
+      }
+    }
+    
+    // ========== INICIAR ==========
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+  })();
+  </script>
+
+</body>
+</html>
