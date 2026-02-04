@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#34a853">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- Ícone -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%2334a853' width='100' height='100' rx='20'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>➕</text></svg>">
+  
+  <!-- Fontes -->
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="./styles.css">
+  
+  <title>Cadastrar Registro</title>
+  
+  <style>
+    .form-section {
+      border-radius: 14px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .form-section.tipo-gastos {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      border: 2px solid #ef9a9a;
+    }
+    .form-section.tipo-gastos .section-title { color: #c62828; }
+    .form-section.tipo-gastos .form-group label { color: #b71c1c; }
+    .form-section.tipo-gastos .tipo-btn.active { background: #e53935; color: white; border-color: #e53935; }
+    .form-section.tipo-gastos .btn-add { background: #e53935; }
+
+    .form-section.tipo-investimento {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border: 2px solid #90caf9;
+    }
+    .form-section.tipo-investimento .section-title { color: #1565c0; }
+    .form-section.tipo-investimento .form-group label { color: #0d47a1; }
+    .form-section.tipo-investimento .tipo-btn.active { background: #1e88e5; color: white; border-color: #1e88e5; }
+    .form-section.tipo-investimento .btn-add { background: #1e88e5; }
+
+    .form-content { padding: 14px; }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title .material-icons { font-size: 20px; }
+
+    .tipo-btn {
+      flex: 1;
+      height: 44px;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.7);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      color: #5f6368;
+    }
+    .tipo-btn .material-icons { font-size: 18px; }
+
+    .form-group input,
+    .form-group select {
+      background: rgba(255,255,255,0.9);
+      border: 2px solid rgba(0,0,0,0.06);
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: rgba(0,0,0,0.15);
+      background: #fff;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .form-actions .btn { flex: 1; }
+
+    .btn-add {
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+
+    .resumo-section {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+      color: white;
+      display: none;
+    }
+    .resumo-section.show { display: block; }
+
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .resumo-item { text-align: center; }
+    .resumo-label { font-size: 9px; opacity: 0.85; text-transform: uppercase; margin-bottom: 2px; }
+    .resumo-valor { font-size: 15px; font-weight: 700; }
+
+    .btn-cadastrar {
+      width: 100%;
+      height: 48px;
+      font-size: 14px;
+      background: linear-gradient(135deg, #1a73e8, #1557b0);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 8px rgba(26,115,232,.3);
+    }
+    .btn-cadastrar:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cadastrar .material-icons { font-size: 18px; }
+
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .top-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px;
+      background: #9334e6;
+      border: none;
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 500;
+      color: white;
+      text-decoration: none;
+    }
+    .top-btn.nomes { background: #f57c00; }
+    .top-btn .material-icons { font-size: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Status -->
+  <div id="statusBar" class="status-bar online">
+    <span id="statusIcon">🟢</span>
+    <span id="statusText">Online</span>
+    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
+  </div>
+
+  <!-- Botão Voltar -->
+  <a class="back-button-fixed" href="./index.html">
+    <span class="material-icons">arrow_back</span>
+    Início
+  </a>
+
+  <div class="container">
+    
+    <!-- Barra Superior -->
+    <div class="top-bar">
+      <a href="./nomes.html" class="top-btn nomes">
+        <span class="material-icons">app_registration</span>
+        Nomes
+      </a>
+      <a href="./visualizador.html" class="top-btn">
+        <span class="material-icons">visibility</span>
+        Ver Registros
+      </a>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <h2>📝 Cadastrar Registro</h2>
+    </div>
+
+    <!-- Formulário -->
+    <div class="form-section tipo-gastos" id="formSection">
+      <div class="form-content">
+        
+        <div class="section-title">
+          <span class="material-icons">edit_note</span>
+          <span id="titleText">Novo Registro - Gastos</span>
+        </div>
+
+        <!-- Toggle Tipo -->
+        <div class="tipo-toggle" id="tipoToggle">
+          <button type="button" class="tipo-btn active" data-tipo="gastos">
+            <span class="material-icons">shopping_cart</span>
+            Gastos
+          </button>
+          <button type="button" class="tipo-btn" data-tipo="investimento">
+            <span class="material-icons">trending_up</span>
+            Investimento
+          </button>
+        </div>
+
+        <!-- Data e Categoria -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="inputData">
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="selectCategoria">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Descrição -->
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="inputDescricao" placeholder="Descrição do registro">
+        </div>
+
+        <!-- Método e Parcelas -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Método</label>
+            <select id="selectMetodo">
+              <option value="">Selecione...</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="pix">Pix</option>
+              <option value="cartaoCredito">Cartão de Crédito</option>
+              <option value="cartaoDebito">Cartão de Débito</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="groupParcelas">
+            <label>Parcelas</label>
+            <select id="selectParcelas">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+              <option value="5">5x</option>
+              <option value="6">6x</option>
+              <option value="7">7x</option>
+              <option value="8">8x</option>
+              <option value="9">9x</option>
+              <option value="10">10x</option>
+              <option value="11">11x</option>
+              <option value="12">12x</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cartão e Valor -->
+        <div class="form-row">
+          <div class="form-group hidden" id="groupCartao">
+            <label>Cartão</label>
+            <select id="selectCartao">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor</label>
+            <input type="text" id="inputValor" placeholder="R$ 0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="btnLimpar">
+            <span class="material-icons">clear</span>
+            Limpar
+          </button>
+          <button type="button" class="btn btn-add" id="btnAdicionar">
+            <span class="material-icons">add</span>
+            Adicionar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo-section" id="resumoSection">
+      <div class="resumo-grid">
+        <div class="resumo-item">
+          <div class="resumo-label">Itens</div>
+          <div class="resumo-valor" id="resumoQtd">0</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Gastos</div>
+          <div class="resumo-valor" id="resumoGastos">R$ 0</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Investimento</div>
+          <div class="resumo-valor" id="resumoInvest">R$ 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Registros -->
+    <div class="list-section">
+      <div class="list-header">
+        <div class="list-title">
+          <span class="material-icons">list_alt</span>
+          Lista para Cadastrar
+        </div>
+        <span class="list-count" id="countRegistros">0 itens</span>
+      </div>
+      <div class="list-body" id="listaRegistros">
+        <div class="empty-state">
+          <span class="material-icons">inbox</span>
+          <p>Nenhum registro na lista</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão Cadastrar -->
+    <div class="form-card">
+      <button type="button" class="btn-cadastrar" id="btnCadastrar" disabled>
+        <span class="material-icons">cloud_upload</span>
+        Cadastrar na Planilha
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Carregando...</div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="./app.js"></script>
+  
+  <script>
+  (function() {
+    'use strict';
+    
+    // ========== ESTADO ==========
+    let tipo = 'gastos';
+    let lista = [];
+    let categorias = { gastos: [], investimento: [] };
+    let cartoes = [];
+    
+    // ========== ELEMENTOS ==========
+    const els = {
+      formSection: document.getElementById('formSection'),
+      titleText: document.getElementById('titleText'),
+      tipoToggle: document.getElementById('tipoToggle'),
+      inputData: document.getElementById('inputData'),
+      selectCategoria: document.getElementById('selectCategoria'),
+      inputDescricao: document.getElementById('inputDescricao'),
+      selectMetodo: document.getElementById('selectMetodo'),
+      groupParcelas: document.getElementById('groupParcelas'),
+      selectParcelas: document.getElementById('selectParcelas'),
+      groupCartao: document.getElementById('groupCartao'),
+      selectCartao: document.getElementById('selectCartao'),
+      inputValor: document.getElementById('inputValor'),
+      btnLimpar: document.getElementById('btnLimpar'),
+      btnAdicionar: document.getElementById('btnAdicionar'),
+      resumoSection: document.getElementById('resumoSection'),
+      resumoQtd: document.getElementById('resumoQtd'),
+      resumoGastos: document.getElementById('resumoGastos'),
+      resumoInvest: document.getElementById('resumoInvest'),
+      countRegistros: document.getElementById('countRegistros'),
+      listaRegistros: document.getElementById('listaRegistros'),
+      btnCadastrar: document.getElementById('btnCadastrar')
+    };
+    
+    // ========== INICIALIZAÇÃO ==========
+    async function init() {
+      console.log('[Cadastro] Inicializando...');
+      
+      setDataHoje();
+      setupEventos();
+      await carregarDados();
+      
+      console.log('[Cadastro] Pronto!');
+    }
+    
+    function setDataHoje() {
+      const hoje = new Date();
+      els.inputData.value = hoje.toISOString().split('T')[0];
+    }
+    
+    // ========== CARREGAR DADOS ==========
+    async function carregarDados() {
+      const App = window.FinanceiroApp;
+      
+      // Carrega categorias do cache
+      const cachedG = await App.getCachedData('categorias_gastos');
+      const cachedI = await App.getCachedData('categorias_investimento');
+      
+      if (cachedG) categorias.gastos = cachedG;
+      if (cachedI) categorias.investimento = cachedI;
+      
+      preencherCategorias();
+      
+      // Carrega cartões do cache
+      const cachedC = await App.getCachedData('cartoes');
+      if (cachedC) {
+        cartoes = cachedC;
+        preencherCartoes();
+      }
+      
+      // Se online, atualiza do servidor
+      if (navigator.onLine) {
+        try {
+          // Categorias de gastos
+          const resG = await App.apiRequest('obterCategorias', { tipo: 'gastos' });
+          if (resG.success && resG.data) {
+            categorias.gastos = resG.data;
+            await App.cacheData('categorias_gastos', resG.data);
+          }
+          
+          // Categorias de investimento
+          const resI = await App.apiRequest('obterCategorias', { tipo: 'investimento' });
+          if (resI.success && resI.data) {
+            categorias.investimento = resI.data;
+            await App.cacheData('categorias_investimento', resI.data);
+          }
+          
+          preencherCategorias();
+          
+          // Cartões
+          const resC = await App.apiRequest('obterCartoes');
+          if (resC.success && resC.data) {
+            cartoes = resC.data;
+            await App.cacheData('cartoes', resC.data);
+            preencherCartoes();
+          }
+        } catch (error) {
+          console.error('[Cadastro] Erro ao carregar dados:', error);
+        }
+      }
+    }
+    
+    function preencherCategorias() {
+      const cats = tipo === 'gastos' ? categorias.gastos : categorias.investimento;
+      let html = '<option value="">Selecione...</option>';
+      
+      for (const cat of cats) {
+        if (cat && cat.trim()) {
+          html += `<option value="${cat}">${cat}</option>`;
+        }
+      }
+      
+      els.selectCategoria.innerHTML = html;
+    }
+    
+    function preencherCartoes() {
+      let html = '<option value="">Selecione...</option>';
+      
+      for (const cartao of cartoes) {
+        html += `<option value="${cartao}">${cartao}</option>`;
+      }
+      
+      els.selectCartao.innerHTML = html;
+    }
+    
+    // ========== EVENTOS ==========
+    function setupEventos() {
+      // Toggle tipo
+      els.tipoToggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('.tipo-btn');
+        if (btn && btn.dataset.tipo) {
+          selecionarTipo(btn.dataset.tipo);
+        }
+      });
+      
+      // Categoria muda descrição
+      els.selectCategoria.addEventListener('change', () => {
+        const cat = els.selectCategoria.value;
+        if (cat) {
+          els.inputDescricao.value = cat;
+          verificarValorFixo(cat);
+        }
+      });
+      
+      // Método de pagamento
+      els.selectMetodo.addEventListener('change', () => {
+        const isCartao = els.selectMetodo.value === 'cartaoCredito';
+        els.groupParcelas.classList.toggle('hidden', !isCartao);
+        els.groupCartao.classList.toggle('hidden', !isCartao);
+        
+        if (isCartao && cartoes.length > 0 && !els.selectCartao.value) {
+          els.selectCartao.value = cartoes[0];
+        }
+      });
+      
+      // Máscara de valor
+      els.inputValor.addEventListener('input', (e) => {
+        window.FinanceiroApp.maskMoney(e);
+      });
+      
+      // Botões
+      els.btnLimpar.addEventListener('click', limparFormulario);
+      els.btnAdicionar.addEventListener('click', adicionarItem);
+      els.btnCadastrar.addEventListener('click', cadastrarTodos);
+      
+      // Delegação para remover itens
+      els.listaRegistros.addEventListener('click', (e) => {
+        const btn = e.target.closest('.action-btn.delete');
+        if (btn) {
+          const index = parseInt(btn.dataset.index);
+          removerItem(index);
+        }
+      });
+    }
+    
+    // ========== TIPO ==========
+    function selecionarTipo(novoTipo) {
+      tipo = novoTipo;
+      
+      // Atualiza botões
+      els.tipoToggle.querySelectorAll('.tipo-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tipo === tipo);
+      });
+      
+      // Atualiza visual
+      els.formSection.className = `form-section tipo-${tipo}`;
+      els.titleText.textContent = `Novo Registro - ${tipo === 'gastos' ? 'Gastos' : 'Investimento'}`;
+      
+      // Recarrega categorias
+      preencherCategorias();
+    }
+    
+    // ========== VALOR FIXO ==========
+    async function verificarValorFixo(categoria) {
+      const App = window.FinanceiroApp;
+      
+      try {
+        const result = await App.apiRequest('obterValorFixo', {
+          categoria: categoria,
+          tipo: tipo
+        });
+        
+        if (result.success && result.valor) {
+          els.inputValor.value = App.formatMoney(result.valor);
+        }
+      } catch (error) {
+        // Silencioso
+      }
+    }
+    
+    // ========== FORMULÁRIO ==========
+    function limparFormulario() {
+      setDataHoje();
+      els.selectCategoria.value = '';
+      els.inputDescricao.value = '';
+      els.selectMetodo.value = '';
+      els.selectParcelas.value = '1';
+      els.selectCartao.value = '';
+      els.inputValor.value = '';
+      els.groupParcelas.classList.add('hidden');
+      els.groupCartao.classList.add('hidden');
+    }
+    
+    function adicionarItem() {
+      const App = window.FinanceiroApp;
+      
+      const data = els.inputData.value;
+      const categoria = els.selectCategoria.value;
+      const descricao = els.inputDescricao.value.trim();
+      const metodo = els.selectMetodo.value;
+      const parcelas = els.selectParcelas.value;
+      const cartao = els.selectCartao.value;
+      const valor = App.parseMoney(els.inputValor.value);
+      
+      // Validações
+      if (!data) {
+        App.showToast('Informe a data', 'error');
+        return;
+      }
+      if (!categoria) {
+        App.showToast('Selecione a categoria', 'error');
+        return;
+      }
+      if (!metodo) {
+        App.showToast('Selecione o método', 'error');
+        return;
+      }
+      if (valor <= 0) {
+        App.showToast('Informe o valor', 'error');
+        return;
+      }
+      if (metodo === 'cartaoCredito' && !cartao) {
+        App.showToast('Selecione o cartão', 'error');
+        return;
+      }
+      
+      // Formata data
+      const partes = data.split('-');
+      const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      
+      // Adiciona à lista
+      lista.push({
+        id: App.generateId(),
+        data: dataFormatada,
+        tipoCategoria: tipo,
+        categoria: categoria,
+        descricao: descricao || categoria,
+        metodoPagamento: metodo,
+        nomeCartao: metodo === 'cartaoCredito' ? cartao : '',
+        quantidadeParcelas: metodo === 'cartaoCredito' ? parseInt(parcelas) : 1,
+        preco: valor
+      });
+      
+      renderizarLista();
+      limparFormulario();
+      App.showToast('Adicionado à lista!', 'success');
+    }
+    
+    function removerItem(index) {
+      lista.splice(index, 1);
+      renderizarLista();
+      window.FinanceiroApp.showToast('Removido', 'success');
+    }
+    
+    // ========== RENDERIZAÇÃO ==========
+    function renderizarLista() {
+      const App = window.FinanceiroApp;
+      const n = lista.length;
+      
+      els.countRegistros.textContent = `${n} ${n === 1 ? 'item' : 'itens'}`;
+      els.btnCadastrar.disabled = n === 0;
+      
+      if (n === 0) {
+        els.listaRegistros.innerHTML = `
+          <div class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Nenhum registro na lista</p>
+          </div>
+        `;
+        els.resumoSection.classList.remove('show');
+        return;
+      }
+      
+      // Calcula totais
+      let totalG = 0, totalI = 0;
+      for (const item of lista) {
+        if (item.tipoCategoria === 'gastos') totalG += item.preco;
+        else totalI += item.preco;
+      }
+      
+      // Atualiza resumo
+      els.resumoSection.classList.add('show');
+      els.resumoQtd.textContent = n;
+      els.resumoGastos.textContent = formatShort(totalG);
+      els.resumoInvest.textContent = formatShort(totalI);
+      
+      // Renderiza cards
+      let html = '';
+      
+      for (let i = 0; i < lista.length; i++) {
+        const item = lista[i];
+        const isGastos = item.tipoCategoria === 'gastos';
+        const cardClass = App.getCardColorClass(item.nomeCartao);
+        const metodoIcon = getMetodoIcon(item.metodoPagamento);
+        const metodoNome = getMetodoNome(item.metodoPagamento);
+        
+        html += `
+          <div class="registro-card tipo-${item.tipoCategoria}">
+            <div class="registro-card-actions">
+              <button class="action-btn delete" data-index="${i}">
+                <span class="material-icons">close</span>
+              </button>
+            </div>
+            <div class="registro-card-top">
+              <span class="badge badge-${item.tipoCategoria}">${isGastos ? 'Gastos' : 'Invest.'}</span>
+              ${item.nomeCartao ? `<span class="badge badge-cartao ${cardClass}">${item.nomeCartao}</span>` : ''}
+              <span class="registro-card-data">${item.data}</span>
+            </div>
+            <div class="registro-card-descricao">${item.descricao}</div>
+            <div class="registro-card-categoria">${item.categoria}</div>
+            <div class="registro-card-footer">
+              <div class="registro-card-metodo">
+                <span class="material-icons">${metodoIcon}</span>
+                ${metodoNome}
+                ${item.quantidadeParcelas > 1 ? `<span class="registro-card-parcelas">(${item.quantidadeParcelas}x)</span>` : ''}
+              </div>
+              <div class="registro-card-valor ${item.tipoCategoria}">${App.formatMoney(item.preco)}</div>
+            </div>
+          </div>
+        `;
+      }
+      
+      els.listaRegistros.innerHTML = html;
+    }
+    
+    function formatShort(v) {
+      if (v >= 1000) return 'R$ ' + (v/1000).toFixed(1) + 'k';
+      return 'R$ ' + v.toFixed(0);
+    }
+    
+    function getMetodoIcon(m) {
+      if (m === 'cartaoCredito' || m === 'cartaoDebito') return 'credit_card';
+      if (m === 'pix') return 'pix';
+      return 'payments';
+    }
+    
+    function getMetodoNome(m) {
+      if (m === 'cartaoCredito') return 'Crédito';
+      if (m === 'cartaoDebito') return 'Débito';
+      if (m === 'pix') return 'Pix';
+      if (m === 'dinheiro') return 'Dinheiro';
+      return m;
+    }
+    
+    // ========== CADASTRAR ==========
+    async function cadastrarTodos() {
+      if (lista.length === 0) return;
+      
+      const App = window.FinanceiroApp;
+      
+      App.showLoader(true, 'Cadastrando...');
+      els.btnCadastrar.disabled = true;
+      
+      try {
+        const result = await App.executeOperation('cadastrarRegistros', {
+          produtos: lista
+        });
+        
+        if (result.success) {
+          if (result.offline) {
+            App.showToast(`${lista.length} registros salvos offline!`, 'warning');
+          } else {
+            App.showToast('Cadastrado com sucesso!', 'success');
+          }
+          
+          lista = [];
+          renderizarLista();
+        } else {
+          App.showToast(result.error || 'Erro ao cadastrar', 'error');
+        }
+      } catch (error) {
+        App.showToast('Erro: ' + error.message, 'error');
+      } finally {
+        App.showLoader(false);
+        els.btnCadastrar.disabled = lista.length === 0;
+      }
+    }
+    
+    // ========== INICIAR ==========
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+  })();
+  </script>
+
+</body>
+</html>
