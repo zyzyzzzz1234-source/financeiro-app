@@ -196,11 +196,10 @@
 </head>
 <body>
 
-  <!-- Barra de Status -->
-  <div id="statusBar" class="status-bar online">
+   <!-- Indicador de Status (discreto) -->
+  <div id="statusIndicator" style="position:fixed;top:8px;right:8px;z-index:9999;font-size:10px;padding:4px 8px;background:rgba(255,255,255,0.9);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
     <span id="statusIcon">🟢</span>
     <span id="statusText">Online</span>
-    <span id="pendingBadge" class="pending-badge" style="display:none">0</span>
   </div>
 
   <!-- Botão Voltar -->
@@ -369,49 +368,54 @@
     }
     
     async function carregarDados(tipo) {
-      const App = window.FinanceiroApp;
+      const API_URL = localStorage.getItem('API_URL');
+      
+      if (!API_URL) {
+        mostrarErro('API não configurada');
+        return;
+      }
       
       const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
       
-      // Tenta cache primeiro
-      const cached = await App.getCachedData(cacheKey);
-      if (cached) {
-        dados[tipo] = cached;
-        renderizarLista(tipo);
-      }
-      
-      // Se online, busca da API
-      if (navigator.onLine) {
-        try {
-          let result;
-          
-          if (tipo === 'cartoes') {
-            result = await App.apiRequest('obterCartoes');
-          } else {
-            result = await App.apiRequest('obterCategorias', { tipo: tipo });
-          }
-          
-          if (result.success && result.data) {
-            dados[tipo] = result.data.filter(item => item && item.trim());
-            await App.cacheData(cacheKey, dados[tipo]);
-            renderizarLista(tipo);
-          }
-        } catch (error) {
-          console.error(`[Nomes] Erro ao carregar ${tipo}:`, error);
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ 
+            acao: tipo === 'cartoes' ? 'obterCartoes' : 'obterCategorias',
+            tipo: tipo
+          })
+        });
+        
+        const result = JSON.parse(await response.text());
+        
+        if (result.success && result.data) {
+          dados[tipo] = result.data.filter(item => item && item.trim());
+          renderizarLista(tipo);
         }
-      }
-      
-      // Se não tem dados
-      if (dados[tipo].length === 0) {
+      } catch (error) {
+        console.error(`Erro ao carregar ${tipo}:`, error);
+        
+        // Mostra mensagem de erro na lista
         const lista = els[`lista${capitalize(tipo)}`];
-        if (lista && !cached) {
+        if (lista) {
           lista.innerHTML = `
             <div class="empty-items">
-              <span class="material-icons">inbox</span>
-              Nenhum item cadastrado
+              <span class="material-icons">cloud_off</span>
+              Erro ao conectar
             </div>
           `;
         }
+      }
+    }
+    
+    function mostrarErro(msg) {
+      const App = window.FinanceiroApp;
+      if (App && App.showToast) {
+        App.showToast(msg, 'error');
+      } else {
+        alert(msg);
       }
     }
     
@@ -509,107 +513,116 @@
     
     // ========== ADICIONAR ==========
     async function adicionarItem(tipo, inputEl) {
-      const App = window.FinanceiroApp;
+      const API_URL = localStorage.getItem('API_URL');
       const nome = inputEl.value.trim();
       
       if (!nome) {
-        App.showToast('Digite um nome', 'error');
+        mostrarErro('Digite um nome');
         return;
       }
       
-      // Verifica duplicado
-      if (dados[tipo].includes(nome)) {
-        App.showToast('Este nome já existe', 'error');
+      if (dados[tipo] && dados[tipo].includes(nome)) {
+        mostrarErro('Este nome já existe');
         return;
       }
       
-      App.showLoader(true, 'Salvando...');
+      // Mostra loader
+      const App = window.FinanceiroApp;
+      if (App && App.showLoader) App.showLoader(true, 'Salvando...');
       
       try {
-        let acao;
-        let params;
+        let acao, params;
         
         if (tipo === 'cartoes') {
-          acao = 'adicionarCartao';
-          params = { nomeCartao: nome };
+          acao = 'salvarCartaoNovo';
+          params = { nome: nome, fechamento: 1, vencimento: 10, cor: '#1a73e8' };
+        } else if (tipo === 'gastos') {
+          acao = 'salvarCategoriaGasto';
+          params = { nome: nome, valor: 0 };
         } else {
-          acao = 'adicionarCategoria';
-          params = { tipo: tipo, nomeCategoria: nome };
+          acao = 'salvarCategoriaInvestimento';
+          params = { nome: nome, valor: 0 };
         }
         
-        const result = await App.executeOperation(acao, params);
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ acao, ...params })
+        });
+        
+        const result = JSON.parse(await response.text());
         
         if (result.success) {
-          // Adiciona localmente
           dados[tipo].push(nome);
           dados[tipo].sort();
-          
-          // Atualiza cache
-          const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
-          await App.cacheData(cacheKey, dados[tipo]);
-          
           renderizarLista(tipo);
           inputEl.value = '';
           
-          if (result.offline) {
-            App.showToast('Salvo offline!', 'warning');
-          } else {
-            App.showToast('Adicionado com sucesso!', 'success');
-          }
+          if (App && App.showToast) App.showToast('Adicionado!', 'success');
         } else {
-          App.showToast(result.error || 'Erro ao adicionar', 'error');
+          mostrarErro(result.message || 'Erro ao adicionar');
         }
       } catch (error) {
-        App.showToast('Erro: ' + error.message, 'error');
+        mostrarErro('Erro: ' + error.message);
       } finally {
-        App.showLoader(false);
+        if (App && App.showLoader) App.showLoader(false);
       }
     }
     
     // ========== EXCLUIR ==========
     async function excluirItem(tipo, nome) {
-      const App = window.FinanceiroApp;
+      const API_URL = localStorage.getItem('API_URL');
       
       if (!confirm(`Excluir "${nome}"?`)) return;
       
-      App.showLoader(true, 'Excluindo...');
+      const App = window.FinanceiroApp;
+      if (App && App.showLoader) App.showLoader(true, 'Excluindo...');
       
       try {
-        let acao;
-        let params;
-        
-        if (tipo === 'cartoes') {
-          acao = 'removerCartao';
-          params = { nomeCartao: nome };
-        } else {
-          acao = 'removerCategoria';
-          params = { tipo: tipo, nomeCategoria: nome };
+        // Encontra a linha do item
+        const idx = dados[tipo].indexOf(nome);
+        if (idx === -1) {
+          mostrarErro('Item não encontrado');
+          return;
         }
         
-        const result = await App.executeOperation(acao, params);
+        let acao;
+        if (tipo === 'cartoes') {
+          acao = 'excluirItemRegistroNomes';
+        } else if (tipo === 'gastos') {
+          acao = 'excluirItemRegistroNomes';
+        } else {
+          acao = 'excluirItemRegistroNomes';
+        }
+        
+        const tipoParam = tipo === 'cartoes' ? 'cartao' : (tipo === 'gastos' ? 'gasto' : 'investimento');
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ 
+            acao: acao,
+            tipo: tipoParam,
+            linha: idx + 2  // +2 porque começa na linha 2
+          })
+        });
+        
+        const result = JSON.parse(await response.text());
         
         if (result.success) {
-          // Remove localmente
           dados[tipo] = dados[tipo].filter(item => item !== nome);
-          
-          // Atualiza cache
-          const cacheKey = tipo === 'cartoes' ? 'cartoes' : `categorias_${tipo}`;
-          await App.cacheData(cacheKey, dados[tipo]);
-          
           renderizarLista(tipo);
           
-          if (result.offline) {
-            App.showToast('Exclusão salva offline!', 'warning');
-          } else {
-            App.showToast('Excluído com sucesso!', 'success');
-          }
+          if (App && App.showToast) App.showToast('Excluído!', 'success');
         } else {
-          App.showToast(result.error || 'Erro ao excluir', 'error');
+          mostrarErro(result.message || 'Erro ao excluir');
         }
       } catch (error) {
-        App.showToast('Erro: ' + error.message, 'error');
+        mostrarErro('Erro: ' + error.message);
       } finally {
-        App.showLoader(false);
+        if (App && App.showLoader) App.showLoader(false);
       }
     }
     
