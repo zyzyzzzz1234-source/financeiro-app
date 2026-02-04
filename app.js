@@ -9,7 +9,7 @@
 // Cole aqui a URL do seu Web App do Google Apps Script
 // Exemplo: 'https://script.google.com/macros/s/AKfycbx.../exec'
 
-const API_URL = 'COLE_AQUI_SUA_URL_DO_APPS_SCRIPT';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzBSgD5B_mdZ_IAU5TAPytwC_HsNPRj2RoUmVSSpftVV7Kyye6tUf6FNDPqnqjTV1jj/exec';
 
 // ============================================================================
 
